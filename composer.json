@@ -1,0 +1,21 @@
+{
+	"name": "dg/bypass-finals",
+	"description": "Removes final keyword from source code on-the-fly and allows mocking of final methods and classes",
+	"keywords": ["testing", "unit", "phpunit", "mocking", "finals"],
+	"license": ["BSD-3-Clause", "GPL-2.0", "GPL-3.0"],
+	"authors": [
+		{
+			"name": "David Grudl",
+			"homepage": "https://davidgrudl.com"
+		}
+	],
+	"require": {
+		"php": ">=5.6"
+	},
+	"require-dev": {
+		"nette/tester": "^2.0"
+	},
+	"autoload": {
+		"classmap": ["src/"]
+	}
+}
