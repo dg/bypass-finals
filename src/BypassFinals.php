@@ -16,9 +16,6 @@ class BypassFinals
 	/** @var resource|null */
 	private $handle;
 
-	/** @var callable[] */
-	private static $mutators = [__CLASS__, 'removeFinals'];
-
 
 	public static function enable()
 	{
