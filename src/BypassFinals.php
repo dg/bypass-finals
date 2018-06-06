@@ -186,6 +186,10 @@ class BypassFinals
 
 	public function url_stat($path, $flags)
 	{
+		if (!$this->native('file_exists', $path)) {
+			return null;
+		}
+
 		return $this->native(
 			$flags & STREAM_URL_STAT_LINK ? 'lstat' : 'stat',
 			$path
