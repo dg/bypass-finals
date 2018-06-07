@@ -186,10 +186,10 @@ class BypassFinals
 
 	public function url_stat($path, $flags)
 	{
-		return $this->native(
-			$flags & STREAM_URL_STAT_LINK ? 'lstat' : 'stat',
-			$path
-		);
+		$func = $flags & STREAM_URL_STAT_LINK ? 'lstat' : 'stat';
+		return $flags & STREAM_URL_STAT_QUIET
+			? @$this->native($func, $path)
+			: $this->native($func, $path);
 	}
 
 
