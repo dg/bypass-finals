@@ -51,7 +51,7 @@ class BypassFinals
 
 	public function mkdir($path, $mode, $options)
 	{
-		return $this->native('mkdir', $mode, false, $this->context);
+		return $this->native('mkdir', $path, $mode, false, $this->context);
 	}
 
 
@@ -63,7 +63,7 @@ class BypassFinals
 
 	public function rmdir($path, $options)
 	{
-		return $this->native('rmdir', $this->context);
+		return $this->native('rmdir', $path, $this->context);
 	}
 
 
@@ -101,6 +101,7 @@ class BypassFinals
 	{
 		switch ($option) {
 			case STREAM_META_TOUCH:
+				$value += [null, null];
 				return $this->native('touch', $path, $value[0], $value[1]);
 			case STREAM_META_OWNER_NAME:
 			case STREAM_META_OWNER:
@@ -145,7 +146,7 @@ class BypassFinals
 
 	public function stream_seek($offset, $whence = SEEK_SET)
 	{
-		return fseek($this->handle, $offset, $whence);
+		return fseek($this->handle, $offset, $whence) === 0;
 	}
 
 
