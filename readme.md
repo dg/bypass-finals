@@ -37,3 +37,5 @@ DG\BypassFinals::enable();
 
 You need to enable it before the classes you want to remove the final are loaded. So call it as soon as possible,
 preferably right after `vendor/autoload.php` in loaded.
+
+If you like it, **[please make a donation now](https://nette.org/make-donation?to=bypass-finals)**. Thank you!
