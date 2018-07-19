@@ -207,35 +207,12 @@ class BypassFinals
 	public static function removeFinals($code)
 	{
 		if (strpos($code, 'final') !== false) {
-			$tokens = token_get_all($code);
+			$tokens = PHP_VERSION_ID >= 70000 ? token_get_all($code, TOKEN_PARSE) : token_get_all($code);
 			$code = '';
-			$cache = null;
 			foreach ($tokens as $token) {
-				list($type, $value) = is_array($token) ? $token : [$token, $token];
-
-				if ($cache === null) {
-					if ($type === T_FINAL) {
-						$cache = [$value];
-					} else {
-						$code .= $value;
-					}
-
-				} else {
-					switch ($type) {
-						case T_CLASS:
-						case T_FUNCTION:
-							array_shift($cache);
-							// break omitted
-						case '=':
-						case '(':
-							$code .= implode($cache) . $value;
-							$cache = null;
-							break;
-
-						default:
-							$cache[] = $value;
-					}
-				}
+				$code .= is_array($token)
+					? ($token[0] === T_FINAL ? '' : $token[1])
+					: $token;
 			}
 		}
 		return $code;
