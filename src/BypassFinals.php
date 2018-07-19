@@ -209,10 +209,33 @@ class BypassFinals
 		if (strpos($code, 'final') !== false) {
 			$tokens = token_get_all($code);
 			$code = '';
+			$cache = null;
 			foreach ($tokens as $token) {
-				$code .= is_array($token)
-					? ($token[0] === T_FINAL ? '' : $token[1])
-					: $token;
+				list($type, $value) = is_array($token) ? $token : [$token, $token];
+
+				if ($cache === null) {
+					if ($type === T_FINAL) {
+						$cache = [$value];
+					} else {
+						$code .= $value;
+					}
+
+				} else {
+					switch ($type) {
+						case T_CLASS:
+						case T_FUNCTION:
+							array_shift($cache);
+							// break omitted
+						case '=':
+						case '(':
+							$code .= implode($cache) . $value;
+							$cache = null;
+							break;
+
+						default:
+							$cache[] = $value;
+					}
+				}
 			}
 		}
 		return $code;
