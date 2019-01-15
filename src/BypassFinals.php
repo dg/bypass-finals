@@ -32,7 +32,9 @@ class BypassFinals
 
 	public function dir_opendir($path, $options)
 	{
-		$this->handle = $this->native('opendir', $path, $this->context);
+		$this->handle = $this->context
+			? $this->native('opendir', $path, $this->context)
+			: $this->native('opendir', $path);
 		return (bool) $this->handle;
 	}
 
