@@ -16,8 +16,8 @@ class BypassFinals
 	/** @var resource|null */
 	private $handle;
 
-    /** @var array|null */
-    private static $pathWhitelist = [];
+	/** @var array|null */
+	private static $pathWhitelist = [];
 
 
 	public static function enable()
@@ -27,10 +27,10 @@ class BypassFinals
 	}
 
 
-    public static function setWhitelist(array $pathWhitelist)
-    {
-        self::$pathWhitelist = $pathWhitelist;
-    }
+	public static function setWhitelist(array $pathWhitelist)
+	{
+		self::$pathWhitelist = $pathWhitelist;
+	}
 
 
 	public function dir_closedir()
@@ -229,17 +229,17 @@ class BypassFinals
 		return $code;
 	}
 
-    private static function pathInWhitelist($path)
-    {
-        if (empty(self::$pathWhitelist)) {
-            return true;
-        }
-        foreach (self::$pathWhitelist as $whitelistItem)
-        {
-            if (substr($path, -strlen($whitelistItem)) === $whitelistItem) {
-                return true;
-            }
-        }
-        return false;
-    }
+	private static function pathInWhitelist($path)
+	{
+		if (empty(self::$pathWhitelist)) {
+			return true;
+		}
+		foreach (self::$pathWhitelist as $whitelistItem)
+		{
+			if (substr($path, -strlen($whitelistItem)) === $whitelistItem) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
