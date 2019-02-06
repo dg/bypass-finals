@@ -229,13 +229,13 @@ class BypassFinals
 		return $code;
 	}
 
+
 	private static function pathInWhitelist($path)
 	{
 		if (empty(self::$pathWhitelist)) {
 			return true;
 		}
-		foreach (self::$pathWhitelist as $whitelistItem)
-		{
+		foreach (self::$pathWhitelist as $whitelistItem) {
 			if (substr($path, -strlen($whitelistItem)) === $whitelistItem) {
 				return true;
 			}

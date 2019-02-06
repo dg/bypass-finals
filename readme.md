@@ -46,6 +46,6 @@ DG\BypassFinals::setWhitelist([
 DG\BypassFinals::enable();
 ```
 
-This gives you finer control and can solve issues with certain frameworks and libraries. 
+This gives you finer control and can solve issues with certain frameworks and libraries.
 
 If you like it, **[please make a donation now](https://nette.org/make-donation?to=bypass-finals)**. Thank you!

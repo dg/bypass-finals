@@ -13,7 +13,7 @@ Tester\Environment::setup();
 
 DG\BypassFinals::enable();
 DG\BypassFinals::setWhitelist([
-	'fixtures/final.class.php'
+	'fixtures/final.class.php',
 ]);
 
 require __DIR__ . '/fixtures/final.class.php';
