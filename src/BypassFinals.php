@@ -53,7 +53,8 @@ class BypassFinals
 
 	public function mkdir($path, $mode, $options)
 	{
-		return $this->native('mkdir', $path, $mode, false, $this->context);
+		$recursive = (bool) ($options & STREAM_MKDIR_RECURSIVE);
+		return $this->native('mkdir', $path, $mode, $recursive, $this->context);
 	}
 
 
