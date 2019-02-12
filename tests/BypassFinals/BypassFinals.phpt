@@ -1,8 +1,5 @@
 <?php
-
-/**
- * @phpVersion 7
- */
+declare(strict_types=1);
 
 use Tester\Assert;
 

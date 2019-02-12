@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace DG;
 
 
@@ -8,7 +10,7 @@ namespace DG;
  */
 class BypassFinals
 {
-	const PROTOCOL = 'file';
+	private const PROTOCOL = 'file';
 
 	/** @var resource|null */
 	public $context;
@@ -202,7 +204,7 @@ class BypassFinals
 	private function native($func)
 	{
 		stream_wrapper_restore(self::PROTOCOL);
-		$res = call_user_func_array($func, array_slice(func_get_args(), 1));
+		$res = $func(...array_slice(func_get_args(), 1));
 		stream_wrapper_unregister(self::PROTOCOL);
 		stream_wrapper_register(self::PROTOCOL, __CLASS__);
 		return $res;
