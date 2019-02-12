@@ -11,7 +11,7 @@ Introduction
 ------------
 
 Removes final keywords from source code on-the-fly and allows mocking of final methods and classes.
-It can be used together with any test tool such as PHPUnit or Mockery.
+It can be used together with any test tool such as PHPUnit, Mockery or [Nette Tester](https://tester.nette.org).
 
 
 Installation
