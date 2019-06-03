@@ -96,7 +96,9 @@ class BypassFinals
 
 	public function stream_lock($operation)
 	{
-		return flock($this->handle, $operation);
+		return $operation
+			? flock($this->handle, $operation)
+			: true;
 	}
 
 
