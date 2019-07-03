@@ -18,11 +18,23 @@ class BypassFinals
 	/** @var resource|null */
 	private $handle;
 
+	/** @var array */
+	private static $pathWhitelist = ['*'];
+
 
 	public static function enable(): void
 	{
 		stream_wrapper_unregister(self::PROTOCOL);
 		stream_wrapper_register(self::PROTOCOL, __CLASS__);
+	}
+
+
+	public static function setWhitelist(array $whitelist): void
+	{
+		foreach ($whitelist as &$mask) {
+			$mask = strtr($mask, '\\', '/');
+		}
+		self::$pathWhitelist = $whitelist;
 	}
 
 
@@ -126,7 +138,7 @@ class BypassFinals
 	public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
 	{
 		$usePath = (bool) ($options & STREAM_USE_PATH);
-		if ($mode === 'rb' && pathinfo($path, PATHINFO_EXTENSION) === 'php') {
+		if ($mode === 'rb' && pathinfo($path, PATHINFO_EXTENSION) === 'php' && self::isPathInWhiteList($path)) {
 			$content = $this->native('file_get_contents', $path, $usePath, $this->context);
 			if ($content === false) {
 				return false;
@@ -225,5 +237,17 @@ class BypassFinals
 			}
 		}
 		return $code;
+	}
+
+
+	private static function isPathInWhiteList(string $path): bool
+	{
+		$path = strtr($path, '\\', '/');
+		foreach (self::$pathWhitelist as $mask) {
+			if (fnmatch($mask, $path)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
