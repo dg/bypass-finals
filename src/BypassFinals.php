@@ -3,6 +3,8 @@
 namespace DG;
 
 
+use function file_exists;
+
 /**
  * Removes keyword final from source codes.
  */
@@ -132,7 +134,7 @@ class BypassFinals
 	public function stream_open($path, $mode, $options, &$openedPath)
 	{
 		$usePath = (bool) ($options & STREAM_USE_PATH);
-		if (self::pathInWhitelist($path) && pathinfo($path, PATHINFO_EXTENSION) === 'php') {
+		if (self::pathInWhitelist($path) && pathinfo($path, PATHINFO_EXTENSION) === 'php' && file_exists($path)) {
 			$content = $this->native('file_get_contents', $path, $usePath, $this->context);
 			if ($content === false) {
 				return false;
