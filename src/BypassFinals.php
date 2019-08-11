@@ -123,7 +123,7 @@ class BypassFinals
 	public function stream_open($path, $mode, $options, &$openedPath)
 	{
 		$usePath = (bool) ($options & STREAM_USE_PATH);
-		if (pathinfo($path, PATHINFO_EXTENSION) === 'php') {
+		if ($mode === 'rb' && pathinfo($path, PATHINFO_EXTENSION) === 'php') {
 			$content = $this->native('file_get_contents', $path, $usePath, $this->context);
 			if ($content === false) {
 				return false;
