@@ -211,7 +211,7 @@ class BypassFinals
 
 	public static function removeFinals($code)
 	{
-		if (strpos($code, 'final') !== false) {
+		if (stripos($code, 'final') !== false) {
 			$tokens = PHP_VERSION_ID >= 70000 ? token_get_all($code, TOKEN_PARSE) : token_get_all($code);
 			$code = '';
 			foreach ($tokens as $token) {
