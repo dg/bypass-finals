@@ -41,8 +41,10 @@ jobs:
 
         -   stage: Static Analysis (informative)
             php: 7.4
-            script:
+            install:
+                # Install PHPStan
                 - composer require --dev "phpstan/phpstan:^0.12.23"
+            script:
                 - vendor/bin/phpstan analyse --level 5 src/
 
 
