@@ -13,9 +13,14 @@
 		"php": ">=7.1"
 	},
 	"require-dev": {
-		"nette/tester": "^2.3"
+		"nette/tester": "^2.3",
+		"phpstan/phpstan": "^0.12"
 	},
 	"autoload": {
 		"classmap": ["src/"]
+	},
+	"scripts": {
+		"phpstan": "phpstan analyse --level 5 src",
+		"tester": "tester tests -s"
 	}
 }
