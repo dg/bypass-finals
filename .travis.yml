@@ -42,7 +42,8 @@ jobs:
         -   stage: Static Analysis (informative)
             php: 7.4
             script:
-                - composer run-script phpstan
+                - composer require --dev "phpstan/phpstan:^0.12.23"
+                - vendor/bin/phpstan analyse --level 5 src/
 
 
     allow_failures:
