@@ -19,20 +19,20 @@ class BypassFinals
 	private $handle;
 
 
-	public static function enable()
+	public static function enable(): void
 	{
 		stream_wrapper_unregister(self::PROTOCOL);
 		stream_wrapper_register(self::PROTOCOL, __CLASS__);
 	}
 
 
-	public function dir_closedir()
+	public function dir_closedir(): void
 	{
 		closedir($this->handle);
 	}
 
 
-	public function dir_opendir($path, $options)
+	public function dir_opendir(string $path, int $options): bool
 	{
 		$this->handle = $this->context
 			? $this->native('opendir', $path, $this->context)
@@ -47,56 +47,56 @@ class BypassFinals
 	}
 
 
-	public function dir_rewinddir()
+	public function dir_rewinddir(): bool
 	{
-		return rewinddir($this->handle);
+		return (bool) rewinddir($this->handle);
 	}
 
 
-	public function mkdir($path, $mode, $options)
+	public function mkdir(string $path, int $mode, int $options): bool
 	{
 		$recursive = (bool) ($options & STREAM_MKDIR_RECURSIVE);
 		return $this->native('mkdir', $path, $mode, $recursive, $this->context);
 	}
 
 
-	public function rename($pathFrom, $pathTo)
+	public function rename(string $pathFrom, string $pathTo): bool
 	{
 		return $this->native('rename', $pathFrom, $pathTo, $this->context);
 	}
 
 
-	public function rmdir($path, $options)
+	public function rmdir(string $path, int $options): bool
 	{
 		return $this->native('rmdir', $path, $this->context);
 	}
 
 
-	public function stream_cast($castAs)
+	public function stream_cast(int $castAs)
 	{
 		return $this->handle;
 	}
 
 
-	public function stream_close()
+	public function stream_close(): void
 	{
 		fclose($this->handle);
 	}
 
 
-	public function stream_eof()
+	public function stream_eof(): bool
 	{
 		return feof($this->handle);
 	}
 
 
-	public function stream_flush()
+	public function stream_flush(): bool
 	{
 		return fflush($this->handle);
 	}
 
 
-	public function stream_lock($operation)
+	public function stream_lock(int $operation): bool
 	{
 		return $operation
 			? flock($this->handle, $operation)
@@ -104,7 +104,7 @@ class BypassFinals
 	}
 
 
-	public function stream_metadata($path, $option, $value)
+	public function stream_metadata(string $path, int $option, $value): bool
 	{
 		switch ($option) {
 			case STREAM_META_TOUCH:
@@ -119,10 +119,11 @@ class BypassFinals
 			case STREAM_META_ACCESS:
 				return $this->native('chmod', $path, $value);
 		}
+		return false;
 	}
 
 
-	public function stream_open($path, $mode, $options, &$openedPath)
+	public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
 	{
 		$usePath = (bool) ($options & STREAM_USE_PATH);
 		if ($mode === 'rb' && pathinfo($path, PATHINFO_EXTENSION) === 'php') {
@@ -145,20 +146,21 @@ class BypassFinals
 	}
 
 
-	public function stream_read($count)
+	public function stream_read(int $count)
 	{
 		return fread($this->handle, $count);
 	}
 
 
-	public function stream_seek($offset, $whence = SEEK_SET)
+	public function stream_seek(int $offset, int $whence = SEEK_SET): bool
 	{
 		return fseek($this->handle, $offset, $whence) === 0;
 	}
 
 
-	public function stream_set_option($option, $arg1, $arg2)
+	public function stream_set_option(int $option, int $arg1, int $arg2): bool
 	{
+		return false;
 	}
 
 
@@ -168,31 +170,31 @@ class BypassFinals
 	}
 
 
-	public function stream_tell()
+	public function stream_tell(): int
 	{
 		return ftell($this->handle);
 	}
 
 
-	public function stream_truncate($newSize)
+	public function stream_truncate(int $newSize): bool
 	{
 		return ftruncate($this->handle, $newSize);
 	}
 
 
-	public function stream_write($data)
+	public function stream_write(string $data)
 	{
 		return fwrite($this->handle, $data);
 	}
 
 
-	public function unlink($path)
+	public function unlink(string $path): bool
 	{
 		return $this->native('unlink', $path);
 	}
 
 
-	public function url_stat($path, $flags)
+	public function url_stat(string $path, int $flags)
 	{
 		$func = $flags & STREAM_URL_STAT_LINK ? 'lstat' : 'stat';
 		return $flags & STREAM_URL_STAT_QUIET
@@ -201,7 +203,7 @@ class BypassFinals
 	}
 
 
-	private function native($func)
+	private function native(string $func)
 	{
 		stream_wrapper_restore(self::PROTOCOL);
 		$res = $func(...array_slice(func_get_args(), 1));
@@ -211,7 +213,7 @@ class BypassFinals
 	}
 
 
-	public static function removeFinals($code)
+	public static function removeFinals(string $code): string
 	{
 		if (stripos($code, 'final') !== false) {
 			$tokens = token_get_all($code, TOKEN_PARSE);
