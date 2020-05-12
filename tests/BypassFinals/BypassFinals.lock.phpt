@@ -12,3 +12,5 @@ DG\BypassFinals::enable();
 Assert::noError(function () {
 	file_put_contents(__DIR__ . '/fixtures/tmp', 'foo', LOCK_EX);
 });
+
+unlink(__DIR__ . '/fixtures/tmp');
