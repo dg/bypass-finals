@@ -121,7 +121,7 @@ class BypassFinals
 		switch ($option) {
 			case STREAM_META_TOUCH:
 				$value += [null, null];
-				return $this->native('touch', $path, $value[0], $value[1]);
+				return $this->native('touch', $path, $value[0] ?? time(), $value[1] ?? time());
 			case STREAM_META_OWNER_NAME:
 			case STREAM_META_OWNER:
 				return $this->native('chown', $path, $value);
