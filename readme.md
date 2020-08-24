@@ -38,6 +38,8 @@ DG\BypassFinals::enable();
 You need to enable it before the classes you want to remove the final are loaded. So call it as soon as possible,
 preferably right after `vendor/autoload.php` in loaded.
 
+Note that final internal PHP classes like `Closure` cannot be mocked.
+
 You can choose to only bypass finals in specific files or directories:
 
 ```php
