@@ -223,10 +223,12 @@ class BypassFinals
 	private function native(string $func)
 	{
 		stream_wrapper_restore(self::PROTOCOL);
-		$res = $func(...array_slice(func_get_args(), 1));
-		stream_wrapper_unregister(self::PROTOCOL);
-		stream_wrapper_register(self::PROTOCOL, __CLASS__);
-		return $res;
+		try {
+			return $func(...array_slice(func_get_args(), 1));
+		} finally {
+			stream_wrapper_unregister(self::PROTOCOL);
+			stream_wrapper_register(self::PROTOCOL, __CLASS__);
+		}
 	}
 
 
