@@ -18,7 +18,7 @@ Assert::noError(function () {
 });
 
 Assert::error(function () {
-	touch('known', null);
+	touch('known', 'foo');
 }, TypeError::class);
 
 unlink('known');
