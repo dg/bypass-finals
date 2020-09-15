@@ -48,7 +48,7 @@ jobs:
         -   stage: Static Analysis (informative)
 
 
-sudo: false
+dist: xenial
 
 cache:
     directories:
