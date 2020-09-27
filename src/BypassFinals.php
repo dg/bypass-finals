@@ -10,22 +10,28 @@ namespace DG;
  */
 class BypassFinals
 {
-	private const PROTOCOL = 'file';
+	protected const PROTOCOL = 'file';
 
 	/** @var resource|null */
 	public $context;
 
 	/** @var resource|null */
-	private $handle;
+	protected $handle;
 
 	/** @var array */
-	private static $pathWhitelist = ['*'];
+	protected static $pathWhitelist = ['*'];
 
 
 	public static function enable(): void
 	{
-		stream_wrapper_unregister(self::PROTOCOL);
-		stream_wrapper_register(self::PROTOCOL, __CLASS__);
+		stream_wrapper_unregister(static::PROTOCOL);
+		stream_wrapper_register(static::PROTOCOL, static::class);
+	}
+
+
+	public static function disable(): void
+	{
+		stream_wrapper_restore(static::PROTOCOL);
 	}
 
 
@@ -34,7 +40,7 @@ class BypassFinals
 		foreach ($whitelist as &$mask) {
 			$mask = strtr($mask, '\\', '/');
 		}
-		self::$pathWhitelist = $whitelist;
+		static::$pathWhitelist = $whitelist;
 	}
 
 
@@ -143,12 +149,12 @@ class BypassFinals
 	public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
 	{
 		$usePath = (bool) ($options & STREAM_USE_PATH);
-		if ($mode === 'rb' && pathinfo($path, PATHINFO_EXTENSION) === 'php' && self::isPathInWhiteList($path)) {
+		if ($mode === 'rb' && pathinfo($path, PATHINFO_EXTENSION) === 'php' && static::isPathInWhiteList($path)) {
 			$content = $this->native('file_get_contents', $path, $usePath, $this->context);
 			if ($content === false) {
 				return false;
 			}
-			$modified = self::removeFinals($content);
+			$modified = static::removeFinals($content, $path);
 			if ($modified !== $content) {
 				$this->handle = tmpfile();
 				$this->native('fwrite', $this->handle, $modified);
@@ -220,19 +226,18 @@ class BypassFinals
 	}
 
 
-	private function native(string $func)
+	protected function native(string $func)
 	{
-		stream_wrapper_restore(self::PROTOCOL);
+		static::disable();
 		try {
 			return $func(...array_slice(func_get_args(), 1));
 		} finally {
-			stream_wrapper_unregister(self::PROTOCOL);
-			stream_wrapper_register(self::PROTOCOL, __CLASS__);
+			static::enable();
 		}
 	}
 
 
-	public static function removeFinals(string $code): string
+	public static function removeFinals(string $code, string $path): string
 	{
 		if (stripos($code, 'final') !== false) {
 			$tokens = token_get_all($code, TOKEN_PARSE);
@@ -247,10 +252,10 @@ class BypassFinals
 	}
 
 
-	private static function isPathInWhiteList(string $path): bool
+	protected static function isPathInWhiteList(string $path): bool
 	{
 		$path = strtr($path, '\\', '/');
-		foreach (self::$pathWhitelist as $mask) {
+		foreach (static::$pathWhitelist as $mask) {
 			if (fnmatch($mask, $path)) {
 				return true;
 			}
