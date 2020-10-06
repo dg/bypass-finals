@@ -1,4 +1,6 @@
 <?php
+// test that magic contants are not affected by BypassFinals
+
 declare(strict_types=1);
 
 use Tester\Assert;

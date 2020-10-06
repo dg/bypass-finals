@@ -1,4 +1,6 @@
 <?php
+// test setWhitelist()
+
 declare(strict_types=1);
 
 use Tester\Assert;

@@ -1,4 +1,6 @@
 <?php
+// test that BypassFinals works
+
 declare(strict_types=1);
 
 use Tester\Assert;

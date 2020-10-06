@@ -1,4 +1,6 @@
 <?php
+// test overloaded file_put_contents() with lock
+
 declare(strict_types=1);
 
 use Tester\Assert;
@@ -10,15 +12,7 @@ Tester\Environment::setup();
 DG\BypassFinals::enable();
 
 Assert::noError(function () {
-	touch('known');
+	file_put_contents(__DIR__ . '/fixtures/tmp', 'foo', LOCK_EX);
 });
 
-Assert::noError(function () {
-	touch('known', time());
-});
-
-Assert::error(function () {
-	touch('known', 'foo');
-}, TypeError::class);
-
-unlink('known');
+unlink(__DIR__ . '/fixtures/tmp');
