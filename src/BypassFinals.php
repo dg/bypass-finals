@@ -234,14 +234,21 @@ class BypassFinals
 
 	public static function removeFinals(string $code): string
 	{
-		if (stripos($code, 'final') !== false) {
+		if (stripos($code, 'final') === false) {
+			return $code;
+		}
+
+		try {
 			$tokens = token_get_all($code, TOKEN_PARSE);
-			$code = '';
-			foreach ($tokens as $token) {
-				$code .= is_array($token)
-					? ($token[0] === T_FINAL ? '' : $token[1])
-					: $token;
-			}
+		} catch (\ParseError $e) {
+			return $code;
+		}
+
+		$code = '';
+		foreach ($tokens as $token) {
+			$code .= is_array($token)
+				? ($token[0] === T_FINAL ? '' : $token[1])
+				: $token;
 		}
 		return $code;
 	}
