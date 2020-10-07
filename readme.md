@@ -50,4 +50,10 @@ DG\BypassFinals::setWhitelist([
 
 This gives you finer control and can solve issues with certain frameworks and libraries.
 
-If you like it, **[please make a donation now](https://nette.org/make-donation?to=bypass-finals)**. Thank you!
+
+Support Project
+---------------
+
+Do you like BypassFinals?
+
+[![Donate](https://files.nette.org/icons/donation-1.svg?)](https://nette.org/make-donation?to=bypass-finals)
