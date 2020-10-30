@@ -25,7 +25,7 @@ class BypassFinals
 	public static function enable(): void
 	{
 		stream_wrapper_unregister(self::PROTOCOL);
-		stream_wrapper_register(self::PROTOCOL, __CLASS__);
+		stream_wrapper_register(self::PROTOCOL, self::class);
 	}
 
 
@@ -227,7 +227,7 @@ class BypassFinals
 			return $func(...array_slice(func_get_args(), 1));
 		} finally {
 			stream_wrapper_unregister(self::PROTOCOL);
-			stream_wrapper_register(self::PROTOCOL, __CLASS__);
+			stream_wrapper_register(self::PROTOCOL, self::class);
 		}
 	}
 
