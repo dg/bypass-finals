@@ -2,7 +2,7 @@ Bypass Finals
 =============
 
 [![Downloads this Month](https://img.shields.io/packagist/dm/dg/bypass-finals.svg)](https://packagist.org/packages/dg/bypass-finals)
-[![Build Status](https://travis-ci.org/dg/bypass-finals.svg?branch=master)](https://travis-ci.org/dg/bypass-finals)
+[![Tests](https://github.com/dg/bypass-finals/workflows/Tests/badge.svg?branch=master)](https://github.com/dg/bypass-finals/actions)
 [![Latest Stable Version](https://poser.pugx.org/dg/bypass-finals/v/stable)](https://github.com/dg/bypass-finals/releases)
 [![License](https://img.shields.io/badge/license-New%20BSD-blue.svg)](https://github.com/dg/bypass-finals/blob/master/license.md)
 
