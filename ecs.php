@@ -14,6 +14,8 @@ return function (Symfony\Component\DependencyInjection\Loader\Configurator\Conta
 	$parameters = $containerConfigurator->parameters();
 
 	$parameters->set('skip', [
+		'fixtures/*',
+
 		PHP_CodeSniffer\Standards\PSR1\Sniffs\Methods\CamelCapsMethodNameSniff::class => [
 			'src/BypassFinals.php',
 		],
