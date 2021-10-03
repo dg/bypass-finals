@@ -15,6 +15,9 @@ class BypassFinals
 	/** @var resource|null */
 	public $context;
 
+	/** @var ?string */
+	public static $cacheDir;
+
 	/** @var resource|null */
 	private $handle;
 
@@ -150,7 +153,7 @@ class BypassFinals
 			if ($content === false) {
 				return false;
 			}
-			$modified = self::removeFinals($content);
+			$modified = self::cachedRemoveFinals($content);
 			if ($modified !== $content) {
 				$this->handle = tmpfile();
 				$this->native('fwrite', $this->handle, $modified);
@@ -234,12 +237,35 @@ class BypassFinals
 	}
 
 
-	public static function removeFinals(string $code): string
+	public static function cachedRemoveFinals(string $code): string
 	{
 		if (stripos($code, 'final') === false) {
-			return $code;
+			// do nothing
+
+		} elseif (self::$cacheDir) {
+			$hash = sha1($code);
+			if ($file = @fopen(self::$cacheDir . '/' . $hash, 'r')) { // @ may not exist
+				flock($file, LOCK_SH);
+				if ($res = stream_get_contents($file)) {
+					return $res;
+				}
+			}
+			$code = self::removeFinals($code);
+			if ($file = @fopen(self::$cacheDir . '/' . $hash, 'x')) { // @ may exist
+				flock($file, LOCK_EX);
+				fwrite($file, $code);
+			}
+
+		} else {
+			$code = self::removeFinals($code);
 		}
 
+		return $code;
+	}
+
+
+	public static function removeFinals(string $code): string
+	{
 		try {
 			$tokens = token_get_all($code, TOKEN_PARSE);
 		} catch (\ParseError $e) {
