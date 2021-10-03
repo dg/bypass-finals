@@ -24,9 +24,14 @@ class BypassFinals
 	/** @var array */
 	private static $pathWhitelist = ['*'];
 
+	/** @var ?object */
+	private static $prevWrapper;
+
 
 	public static function enable(): void
 	{
+		$meta = stream_get_meta_data(fopen(__FILE__, 'r'));
+		self::$prevWrapper = $meta['wrapper_data'] ?? null;
 		stream_wrapper_unregister(self::PROTOCOL);
 		stream_wrapper_register(self::PROTOCOL, self::class);
 	}
@@ -149,8 +154,18 @@ class BypassFinals
 	{
 		$usePath = (bool) ($options & STREAM_USE_PATH);
 		if ($mode === 'rb' && pathinfo($path, PATHINFO_EXTENSION) === 'php' && self::isPathInWhiteList($path)) {
-			$content = $this->native('file_get_contents', $path, $usePath, $this->context);
-			if ($content === false) {
+			if (self::$prevWrapper) {
+				$content = null;
+				self::$prevWrapper->stream_open($path, $mode, $options, $openedPath);
+				while (!self::$prevWrapper->stream_eof()) {
+					$content .= self::$prevWrapper->stream_read(8192);
+				}
+
+				self::$prevWrapper->stream_close();
+			} else {
+				$content = $this->native('file_get_contents', $path, $usePath, $this->context);
+			}
+			if (!is_string($content)) {
 				return false;
 			}
 			$modified = self::cachedRemoveFinals($content);
