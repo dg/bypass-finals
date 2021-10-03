@@ -24,6 +24,9 @@ class BypassFinals
 	/** @var ?object */
 	private static $underlyingWrapperClass;
 
+	/** @var ?string */
+	private static $cacheDir;
+
 
 	public static function enable(): void
 	{
@@ -47,6 +50,12 @@ class BypassFinals
 	}
 
 
+	public static function setCacheDirectory(?string $dir): void
+	{
+		self::$cacheDir = $dir;
+	}
+
+
 	public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
 	{
 		$this->wrapper = $this->createUnderlyingWrapper();
@@ -60,7 +69,7 @@ class BypassFinals
 				$content .= $this->wrapper->stream_read(8192);
 			}
 
-			$modified = self::removeFinals($content);
+			$modified = self::cachedRemoveFinals($content);
 			if ($modified === $content) {
 				$this->wrapper->stream_seek(0);
 			} else {
@@ -83,12 +92,36 @@ class BypassFinals
 	}
 
 
-	public static function removeFinals(string $code): string
+	public static function cachedRemoveFinals(string $code): string
 	{
 		if (stripos($code, 'final') === false) {
 			return $code;
 		}
 
+		if (self::$cacheDir) {
+			$wrapper = new NativeWrapper;
+			$hash = sha1($code);
+			if (@$wrapper->stream_open(self::$cacheDir . '/' . $hash, 'r')) { // @ may not exist
+				flock($wrapper->handle, LOCK_SH);
+				if ($res = stream_get_contents($wrapper->handle)) {
+					return $res;
+				}
+			}
+		}
+
+		$code = self::removeFinals($code);
+
+		if (self::$cacheDir && @$wrapper->stream_open(self::$cacheDir . '/' . $hash, 'x')) { // @ may exist
+			flock($wrapper->handle, LOCK_EX);
+			fwrite($wrapper->handle, $code);
+		}
+
+		return $code;
+	}
+
+
+	public static function removeFinals(string $code): string
+	{
 		try {
 			$tokens = token_get_all($code, TOKEN_PARSE);
 		} catch (\ParseError $e) {

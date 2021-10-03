@@ -50,6 +50,11 @@ DG\BypassFinals::setWhitelist([
 
 This gives you finer control and can solve issues with certain frameworks and libraries.
 
+You can try to increase performance by using the cache (the directory must exist):
+
+```php
+DG\BypassFinals::setCacheDirectory(__DIR__ . '/cache');
+```
 
 Support Project
 ---------------
