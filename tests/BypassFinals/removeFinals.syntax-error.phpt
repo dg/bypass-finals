@@ -1,4 +1,5 @@
 <?php
+
 // test that removeFinals() catches token_get_all() exception
 
 declare(strict_types=1);
