@@ -1,4 +1,5 @@
 <?php
+
 // test isPathInWhiteList()
 
 declare(strict_types=1);

@@ -1,4 +1,5 @@
 <?php
+
 // test overloaded touch()
 
 declare(strict_types=1);

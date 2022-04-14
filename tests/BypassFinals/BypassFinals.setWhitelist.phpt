@@ -1,4 +1,5 @@
 <?php
+
 // test setWhitelist()
 
 declare(strict_types=1);

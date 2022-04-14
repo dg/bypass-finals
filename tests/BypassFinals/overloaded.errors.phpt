@@ -1,4 +1,5 @@
 <?php
+
 // test overloaded php functions
 
 declare(strict_types=1);

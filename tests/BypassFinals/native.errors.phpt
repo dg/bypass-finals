@@ -1,4 +1,5 @@
 <?php
+
 // test native php functions - for comparison with overloaded.errors.phpt
 
 declare(strict_types=1);

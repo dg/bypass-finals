@@ -1,4 +1,5 @@
 <?php
+
 // test that BypassFinals works
 
 declare(strict_types=1);

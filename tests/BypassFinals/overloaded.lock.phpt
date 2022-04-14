@@ -1,4 +1,5 @@
 <?php
+
 // test overloaded file_put_contents() with lock
 
 declare(strict_types=1);

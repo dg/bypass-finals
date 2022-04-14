@@ -34,6 +34,7 @@ class BypassFinals
 		foreach ($whitelist as &$mask) {
 			$mask = strtr($mask, '\\', '/');
 		}
+
 		self::$pathWhitelist = $whitelist;
 	}
 
@@ -136,6 +137,7 @@ class BypassFinals
 			case STREAM_META_ACCESS:
 				return $this->native('chmod', $path, $value);
 		}
+
 		return false;
 	}
 
@@ -250,6 +252,7 @@ class BypassFinals
 				? ($token[0] === T_FINAL ? '' : $token[1])
 				: $token;
 		}
+
 		return $code;
 	}
 
@@ -262,6 +265,7 @@ class BypassFinals
 				return true;
 			}
 		}
+
 		return false;
 	}
 }

@@ -1,4 +1,5 @@
 <?php
+
 // test to make sure to restore the stream wrapper even when an exception is throw
 
 declare(strict_types=1);
@@ -12,13 +13,13 @@ Tester\Environment::setup();
 DG\BypassFinals::enable();
 
 $customHandler = static function ($type, $msg, $file, $line) {
-	throw new \ErrorException($msg, 0, $type, $file, $line);
+	throw new ErrorException($msg, 0, $type, $file, $line);
 };
 set_error_handler($customHandler);
 
 try {
 	include 'file/no/found';
-} catch (\ErrorException $e) {
+} catch (ErrorException $e) {
 	// Custom logic if file is missing
 } finally {
 	restore_error_handler();
