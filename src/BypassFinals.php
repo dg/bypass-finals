@@ -160,7 +160,6 @@ class BypassFinals
 				while (!self::$prevWrapper->stream_eof()) {
 					$content .= self::$prevWrapper->stream_read(8192);
 				}
-
 				self::$prevWrapper->stream_close();
 			} else {
 				$content = $this->native('file_get_contents', $path, $usePath, $this->context);
@@ -169,7 +168,7 @@ class BypassFinals
 				return false;
 			}
 			$modified = self::cachedRemoveFinals($content);
-			if ($modified !== $content) {
+			if ($modified !== $content || (self::$prevWrapper && $content !== $this->native('file_get_contents', $path, $usePath, $this->context))) {
 				$this->handle = tmpfile();
 				$this->native('fwrite', $this->handle, $modified);
 				$this->native('fseek', $this->handle, 0);
