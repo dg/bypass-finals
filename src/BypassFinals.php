@@ -242,9 +242,9 @@ class BypassFinals
             } catch (\Throwable $e) {
                 return false;
             }
-        } else {
-            return $this->native($func, $path);
         }
+
+        return $this->native($func, $path);
 	}
 
 
