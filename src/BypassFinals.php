@@ -70,7 +70,9 @@ class BypassFinals
 
 	public function dir_rewinddir(): bool
 	{
-		return (bool) rewinddir($this->handle);
+		rewinddir($this->handle);
+
+        return true;
 	}
 
 
@@ -234,9 +236,15 @@ class BypassFinals
 	public function url_stat(string $path, int $flags)
 	{
 		$func = $flags & STREAM_URL_STAT_LINK ? 'lstat' : 'stat';
-		return $flags & STREAM_URL_STAT_QUIET
-			? @$this->native($func, $path)
-			: $this->native($func, $path);
+        if ($flags & STREAM_URL_STAT_QUIET) {
+            try {
+                return @$this->native($func, $path);
+            } catch (\Throwable $e) {
+                return false;
+            }
+        } else {
+            return $this->native($func, $path);
+        }
 	}
 
 
@@ -244,6 +252,7 @@ class BypassFinals
 	{
 		stream_wrapper_restore(self::PROTOCOL);
 		try {
+            file_put_contents('/tmp/b.txt', 1);
 			return $func(...array_slice(func_get_args(), 1));
 		} finally {
 			stream_wrapper_unregister(self::PROTOCOL);
