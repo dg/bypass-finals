@@ -252,7 +252,6 @@ class BypassFinals
 	{
 		stream_wrapper_restore(self::PROTOCOL);
 		try {
-            file_put_contents('/tmp/b.txt', 1);
 			return $func(...array_slice(func_get_args(), 1));
 		} finally {
 			stream_wrapper_unregister(self::PROTOCOL);
