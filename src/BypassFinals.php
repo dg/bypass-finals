@@ -215,10 +215,15 @@ class BypassFinals
 
 	public function url_stat(string $path, int $flags)
 	{
-		$func = $flags & STREAM_URL_STAT_LINK ? 'lstat' : 'stat';
-		return $flags & STREAM_URL_STAT_QUIET
-			? @$this->native($func, $path)
-			: $this->native($func, $path);
+		try {
+			$func = $flags & STREAM_URL_STAT_LINK ? 'lstat' : 'stat';
+			return $flags & STREAM_URL_STAT_QUIET
+				? @$this->native($func, $path)
+				: $this->native($func, $path);
+		} catch (\RuntimeException $e) {
+			// SplFileInfo::isFile throws exception
+			return false;
+		}
 	}
 
 

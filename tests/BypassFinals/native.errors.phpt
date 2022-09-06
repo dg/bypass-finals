@@ -77,6 +77,7 @@ Assert::same([], glob('unknown'));
 Assert::false(is_dir('unknown'));
 Assert::false(is_executable('unknown'));
 Assert::false(is_file('unknown'));
+Assert::false((new SplFileInfo('unknown'))->isFile());
 Assert::false(is_link('unknown'));
 Assert::false(is_readable('unknown'));
 Assert::false(is_writable('unknown'));
