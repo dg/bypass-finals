@@ -62,7 +62,8 @@ class BypassFinals
 
 	public function dir_rewinddir(): bool
 	{
-		return (bool) rewinddir($this->handle);
+		rewinddir($this->handle);
+		return true;
 	}
 
 
