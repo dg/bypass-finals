@@ -21,7 +21,7 @@ class BypassFinals
 	/** @var array */
 	private static $pathWhitelist = ['*'];
 
-	/** @var ?object */
+	/** @var string */
 	private static $underlyingWrapperClass;
 
 	/** @var ?string */
@@ -30,10 +30,14 @@ class BypassFinals
 
 	public static function enable(): void
 	{
-		$meta = stream_get_meta_data(fopen(__FILE__, 'r'));
-		self::$underlyingWrapperClass = empty($meta['wrapper_data'])
-			? NativeWrapper::class
-			: get_class($meta['wrapper_data']);
+		$wrapper = stream_get_meta_data(fopen(__FILE__, 'r'))['wrapper_data'] ?? null;
+		if ($wrapper instanceof self) {
+			return;
+		}
+
+		self::$underlyingWrapperClass = $wrapper
+			? get_class($wrapper)
+			: NativeWrapper::class;
 		NativeWrapper::$outerWrapper = self::class;
 		stream_wrapper_unregister(self::PROTOCOL);
 		stream_wrapper_register(self::PROTOCOL, self::class);
