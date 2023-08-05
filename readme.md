@@ -23,7 +23,7 @@ The recommended way to install is through Composer:
 composer require dg/bypass-finals --dev
 ```
 
-It requires PHP version 7.1 and supports PHP up to 8.2.
+It requires PHP version 7.1 and supports PHP up to 8.3.
 
 
 Usage
