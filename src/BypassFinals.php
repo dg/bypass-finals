@@ -73,7 +73,7 @@ class BypassFinals
 				$content .= $this->wrapper->stream_read(8192);
 			}
 
-			$modified = self::cachedRemoveFinals($content);
+			$modified = self::modifyCode($content);
 			if ($modified === $content) {
 				$this->wrapper->stream_seek(0);
 			} else {
@@ -96,26 +96,32 @@ class BypassFinals
 	}
 
 
-	public static function cachedRemoveFinals(string $code): string
+	private static function modifyCode(string $code): string
 	{
 		if (stripos($code, 'final') === false) {
 			return $code;
 		}
 
-		if (self::$cacheDir) {
-			$wrapper = new NativeWrapper;
-			$hash = sha1($code);
-			if (@$wrapper->stream_open(self::$cacheDir . '/' . $hash, 'r')) { // @ may not exist
-				flock($wrapper->handle, LOCK_SH);
-				if ($res = stream_get_contents($wrapper->handle)) {
-					return $res;
-				}
+		return self::$cacheDir
+			? self::removeTokensCached($code)
+			: self::removeTokens($code);
+	}
+
+
+	private static function removeTokensCached(string $code): string
+	{
+		$wrapper = new NativeWrapper;
+		$hash = sha1($code);
+		if (@$wrapper->stream_open(self::$cacheDir . '/' . $hash, 'r')) { // @ may not exist
+			flock($wrapper->handle, LOCK_SH);
+			if ($res = stream_get_contents($wrapper->handle)) {
+				return $res;
 			}
 		}
 
-		$code = self::removeFinals($code);
+		$code = self::removeTokens($code);
 
-		if (self::$cacheDir && @$wrapper->stream_open(self::$cacheDir . '/' . $hash, 'x')) { // @ may exist
+		if (@$wrapper->stream_open(self::$cacheDir . '/' . $hash, 'x')) { // @ may exist
 			flock($wrapper->handle, LOCK_EX);
 			fwrite($wrapper->handle, $code);
 		}
@@ -124,7 +130,7 @@ class BypassFinals
 	}
 
 
-	public static function removeFinals(string $code): string
+	private static function removeTokens(string $code): string
 	{
 		try {
 			$tokens = token_get_all($code, TOKEN_PARSE);
