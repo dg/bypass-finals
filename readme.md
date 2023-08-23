@@ -10,7 +10,7 @@ Bypass Finals
 Introduction
 ------------
 
-Removes final keywords from source code on-the-fly and allows mocking of final methods and classes.
+Removes `final` and `readonly` keywords from source code on-the-fly and allows mocking of final methods and classes.
 It can be used together with any test tool such as PHPUnit, Mockery or [Nette Tester](https://tester.nette.org).
 
 
@@ -35,12 +35,12 @@ Simply call this:
 DG\BypassFinals::enable();
 ```
 
-You need to enable it before the classes you want to remove the final are loaded. So call it as soon as possible,
+You need to enable it before the classes you want to remove the keywords from are loaded. So call it as soon as possible,
 preferably right after `vendor/autoload.php` is loaded.
 
 Note that final internal PHP classes like `Closure` cannot be mocked.
 
-You can choose to only bypass finals in specific files or directories:
+You can choose to only bypass keywords in specific files or directories:
 
 ```php
 DG\BypassFinals::setWhitelist([

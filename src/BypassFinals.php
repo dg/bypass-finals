@@ -27,9 +27,18 @@ class BypassFinals
 	/** @var ?string */
 	private static $cacheDir;
 
+	/** @var array */
+	private static $tokens = [
+		T_FINAL => 'final',
+	];
+
 
 	public static function enable(): void
 	{
+		if (PHP_VERSION_ID >= 80100) {
+			self::$tokens[T_READONLY] = 'readonly';
+		}
+
 		$wrapper = stream_get_meta_data(fopen(__FILE__, 'r'))['wrapper_data'] ?? null;
 		if ($wrapper instanceof self) {
 			return;
@@ -98,13 +107,16 @@ class BypassFinals
 
 	private static function modifyCode(string $code): string
 	{
-		if (stripos($code, 'final') === false) {
-			return $code;
+		foreach (self::$tokens as $text) {
+			if (stripos($code, $text) !== false) {
+				return self::$cacheDir
+					? self::removeTokensCached($code)
+					: self::removeTokens($code);
+
+			}
 		}
 
-		return self::$cacheDir
-			? self::removeTokensCached($code)
-			: self::removeTokens($code);
+		return $code;
 	}
 
 
@@ -141,7 +153,7 @@ class BypassFinals
 		$code = '';
 		foreach ($tokens as $token) {
 			$code .= is_array($token)
-				? ($token[0] === T_FINAL ? '' : $token[1])
+				? (isset(self::$tokens[$token[0]]) ? '' : $token[1])
 				: $token;
 		}
 
