@@ -10,13 +10,13 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 Tester\Environment::setup();
 
-
+DG\BypassFinals::setTokensIgnore(["readonly"]);
 DG\BypassFinals::enable();
 
 require __DIR__ . '/fixtures/final.readonly.class.php';
 
 $rc = new ReflectionClass('FinalReadonlyClass');
-Assert::false($rc->isReadOnly());
+Assert::true($rc->isReadOnly());
 Assert::false($rc->isFinal());
 Assert::false($rc->getMethod('finalMethod')->isFinal());
 Assert::same(123, FinalReadonlyClass::FINAL);

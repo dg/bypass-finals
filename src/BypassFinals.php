@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DG;
 
-
 /**
  * Removes keyword final from source codes.
  */
@@ -21,6 +20,9 @@ class BypassFinals
 	/** @var array */
 	private static $pathWhitelist = ['*'];
 
+    /** @var array  */
+    private static $tokensIgnore = [];
+
 	/** @var string */
 	private static $underlyingWrapperClass;
 
@@ -32,10 +34,9 @@ class BypassFinals
 		T_FINAL => 'final',
 	];
 
-
 	public static function enable(): void
 	{
-		if (PHP_VERSION_ID >= 80100) {
+		if (!in_array('readonly', self::$tokensIgnore) && PHP_VERSION_ID >= 80100) {
 			self::$tokens[T_READONLY] = 'readonly';
 		}
 
@@ -52,7 +53,6 @@ class BypassFinals
 		stream_wrapper_register(self::PROTOCOL, self::class);
 	}
 
-
 	public static function setWhitelist(array $whitelist): void
 	{
 		foreach ($whitelist as &$mask) {
@@ -61,6 +61,11 @@ class BypassFinals
 
 		self::$pathWhitelist = $whitelist;
 	}
+
+    public static function setTokensIgnore(array $tokens): void
+    {
+        self::$tokensIgnore = $tokens;
+    }
 
 
 	public static function setCacheDirectory(?string $dir): void
