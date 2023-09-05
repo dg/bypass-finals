@@ -11,14 +11,11 @@ require __DIR__ . '/../../vendor/autoload.php';
 Tester\Environment::setup();
 
 
-DG\BypassFinals::enable();
+DG\BypassFinals::enable(bypassReadOnly: false);
 
 require __DIR__ . '/fixtures/final.readonly.class.php';
 
 $rc = new ReflectionClass('FinalReadonlyClass');
-Assert::false($rc->isReadOnly());
+Assert::true($rc->isReadOnly());
 Assert::false($rc->isFinal());
-Assert::false($rc->getMethod('finalMethod')->isFinal());
-Assert::false($rc->getProperty('foo')->isReadOnly());
-Assert::same(123, FinalReadonlyClass::FINAL);
-Assert::same(456, (new FinalReadonlyClass)->final());
+Assert::true($rc->getProperty('foo')->isReadOnly());
