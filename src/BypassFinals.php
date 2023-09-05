@@ -28,15 +28,16 @@ class BypassFinals
 	private static $cacheDir;
 
 	/** @var array */
-	private static $tokens = [
-		T_FINAL => 'final',
-	];
+	private static $tokens = [];
 
 
-	public static function enable(): void
+	public static function enable(bool $bypassReadOnly = true, bool $bypassFinal = true): void
 	{
-		if (PHP_VERSION_ID >= 80100) {
+		if ($bypassReadOnly && PHP_VERSION_ID >= 80100) {
 			self::$tokens[T_READONLY] = 'readonly';
+		}
+		if ($bypassFinal) {
+			self::$tokens[T_FINAL] = 'final';
 		}
 
 		$wrapper = stream_get_meta_data(fopen(__FILE__, 'r'))['wrapper_data'] ?? null;
