@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DG;
 
+
 /**
  * Removes keyword final from source codes.
  */
@@ -26,10 +27,11 @@ class BypassFinals
 	/** @var ?string */
 	private static $cacheDir;
 
-	/** @var array */
-	private static $tokens = [];
+    /** @var array */
+    private static $tokens = [];
 
-	public static function enable(bool $bypassReadOnly = true, bool $bypassFinal = true): void
+
+    public static function enable(bool $bypassReadOnly = true, bool $bypassFinal = true): void
 	{
 		if ($bypassReadOnly && PHP_VERSION_ID >= 80100) {
 			self::$tokens[T_READONLY] = 'readonly';
