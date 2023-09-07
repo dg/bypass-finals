@@ -20,9 +20,6 @@ class BypassFinals
 	/** @var array */
 	private static $pathWhitelist = ['*'];
 
-    /** @var array  */
-    private static $tokensIgnore = [];
-
 	/** @var string */
 	private static $underlyingWrapperClass;
 
@@ -30,14 +27,15 @@ class BypassFinals
 	private static $cacheDir;
 
 	/** @var array */
-	private static $tokens = [
-		T_FINAL => 'final',
-	];
+	private static $tokens = [];
 
-	public static function enable(): void
+	public static function enable(bool $bypassReadOnly = true, bool $bypassFinal = true): void
 	{
-		if (!in_array('readonly', self::$tokensIgnore) && PHP_VERSION_ID >= 80100) {
+		if ($bypassReadOnly && PHP_VERSION_ID >= 80100) {
 			self::$tokens[T_READONLY] = 'readonly';
+		}
+		if ($bypassFinal) {
+			self::$tokens[T_FINAL] = 'final';
 		}
 
 		$wrapper = stream_get_meta_data(fopen(__FILE__, 'r'))['wrapper_data'] ?? null;
@@ -62,17 +60,10 @@ class BypassFinals
 		self::$pathWhitelist = $whitelist;
 	}
 
-    public static function setTokensIgnore(array $tokens): void
-    {
-        self::$tokensIgnore = $tokens;
-    }
-
-
 	public static function setCacheDirectory(?string $dir): void
 	{
 		self::$cacheDir = $dir;
 	}
-
 
 	public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
 	{

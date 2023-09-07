@@ -40,6 +40,12 @@ preferably right after `vendor/autoload.php` is loaded.
 
 Note that final internal PHP classes like `Closure` cannot be mocked.
 
+The removal of `readonly` keywords can be disabled using the parameter:
+
+```php
+DG\BypassFinals::enable(bypassReadOnly: false);
+```
+
 You can choose to only bypass keywords in specific files or directories:
 
 ```php
