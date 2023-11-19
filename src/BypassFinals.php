@@ -40,7 +40,6 @@ final class BypassFinals
 		MutatingWrapper::$underlyingWrapperClass = $wrapper
 			? get_class($wrapper)
 			: NativeWrapper::class;
-		NativeWrapper::$outerWrapper = MutatingWrapper::class;
 		stream_wrapper_unregister(NativeWrapper::Protocol);
 		stream_wrapper_register(NativeWrapper::Protocol, MutatingWrapper::class);
 	}

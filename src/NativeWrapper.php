@@ -9,12 +9,12 @@ namespace DG\BypassFinals;
  * Wrapper using native functions for working with files and directories.
  * @internal
  */
-class NativeWrapper
+final class NativeWrapper
 {
 	public const Protocol = 'file';
 
 	/** @var string */
-	public static $outerWrapper;
+	public $outerWrapper = MutatingWrapper::class;
 
 	/** @var resource|null */
 	public $context;
@@ -217,7 +217,7 @@ class NativeWrapper
 			return $func(...array_slice(func_get_args(), 1));
 		} finally {
 			stream_wrapper_unregister(self::Protocol);
-			stream_wrapper_register(self::Protocol, self::$outerWrapper);
+			stream_wrapper_register(self::Protocol, $this->outerWrapper);
 		}
 	}
 }
