@@ -62,6 +62,14 @@ You can try to increase performance by using the cache (the directory must exist
 DG\BypassFinals::setCacheDirectory(__DIR__ . '/cache');
 ```
 
+To register BypassFinals in PHPUnit 10, simply add the extension to the PHPUnit XML configuration file:
+
+```xml
+<extensions>
+	<bootstrap class="DG\BypassFinals\PHPUnitExtension"/>
+</extensions>
+```
+
 Support Project
 ---------------
 
