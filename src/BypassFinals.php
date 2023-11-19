@@ -10,8 +10,6 @@ namespace DG;
  */
 class BypassFinals
 {
-	private const PROTOCOL = 'file';
-
 	/** @var resource|null */
 	public $context;
 
@@ -49,8 +47,8 @@ class BypassFinals
 			? get_class($wrapper)
 			: NativeWrapper::class;
 		NativeWrapper::$outerWrapper = self::class;
-		stream_wrapper_unregister(self::PROTOCOL);
-		stream_wrapper_register(self::PROTOCOL, self::class);
+		stream_wrapper_unregister(NativeWrapper::Protocol);
+		stream_wrapper_register(NativeWrapper::Protocol, self::class);
 	}
 
 

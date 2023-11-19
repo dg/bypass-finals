@@ -11,7 +11,7 @@ namespace DG;
  */
 class NativeWrapper
 {
-	private const PROTOCOL = 'file';
+	public const Protocol = 'file';
 
 	/** @var string */
 	public static $outerWrapper;
@@ -212,12 +212,12 @@ class NativeWrapper
 
 	private function native(string $func)
 	{
-		stream_wrapper_restore(self::PROTOCOL);
+		stream_wrapper_restore(self::Protocol);
 		try {
 			return $func(...array_slice(func_get_args(), 1));
 		} finally {
-			stream_wrapper_unregister(self::PROTOCOL);
-			stream_wrapper_register(self::PROTOCOL, self::$outerWrapper);
+			stream_wrapper_unregister(self::Protocol);
+			stream_wrapper_register(self::Protocol, self::$outerWrapper);
 		}
 	}
 }
