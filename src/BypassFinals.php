@@ -4,25 +4,17 @@ declare(strict_types=1);
 
 namespace DG;
 
+use DG\BypassFinals\MutatingWrapper;
 use DG\BypassFinals\NativeWrapper;
 
 
 /**
- * Removes keyword final from source codes.
+ * Removes keyword final & readonly from source codes.
  */
-class BypassFinals
+final class BypassFinals
 {
-	/** @var resource|null */
-	public $context;
-
-	/** @var object|null */
-	private $wrapper;
-
 	/** @var array */
 	private static $pathWhitelist = ['*'];
-
-	/** @var string */
-	private static $underlyingWrapperClass;
 
 	/** @var ?string */
 	private static $cacheDir;
@@ -41,16 +33,16 @@ class BypassFinals
 		}
 
 		$wrapper = stream_get_meta_data(fopen(__FILE__, 'r'))['wrapper_data'] ?? null;
-		if ($wrapper instanceof self) {
+		if ($wrapper instanceof MutatingWrapper) {
 			return;
 		}
 
-		self::$underlyingWrapperClass = $wrapper
+		MutatingWrapper::$underlyingWrapperClass = $wrapper
 			? get_class($wrapper)
 			: NativeWrapper::class;
-		NativeWrapper::$outerWrapper = self::class;
+		NativeWrapper::$outerWrapper = MutatingWrapper::class;
 		stream_wrapper_unregister(NativeWrapper::Protocol);
-		stream_wrapper_register(NativeWrapper::Protocol, self::class);
+		stream_wrapper_register(NativeWrapper::Protocol, MutatingWrapper::class);
 	}
 
 
@@ -70,43 +62,8 @@ class BypassFinals
 	}
 
 
-	public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
-	{
-		$this->wrapper = $this->createUnderlyingWrapper();
-		if (!$this->wrapper->stream_open($path, $mode, $options, $openedPath)) {
-			return false;
-		}
-
-		if ($mode === 'rb' && pathinfo($path, PATHINFO_EXTENSION) === 'php' && self::isPathInWhiteList($path)) {
-			$content = '';
-			while (!$this->wrapper->stream_eof()) {
-				$content .= $this->wrapper->stream_read(8192);
-			}
-
-			$modified = self::modifyCode($content);
-			if ($modified === $content) {
-				$this->wrapper->stream_seek(0);
-			} else {
-				$this->wrapper->stream_close();
-				$this->wrapper = new NativeWrapper;
-				$this->wrapper->handle = tmpfile();
-				$this->wrapper->stream_write($modified);
-				$this->wrapper->stream_seek(0);
-			}
-		}
-
-		return true;
-	}
-
-
-	public function dir_opendir(string $path, int $options): bool
-	{
-		$this->wrapper = $this->createUnderlyingWrapper();
-		return $this->wrapper->dir_opendir($path, $options);
-	}
-
-
-	private static function modifyCode(string $code): string
+	/** @internal */
+	public static function modifyCode(string $code): string
 	{
 		foreach (self::$tokens as $text) {
 			if (stripos($code, $text) !== false) {
@@ -162,7 +119,8 @@ class BypassFinals
 	}
 
 
-	private static function isPathInWhiteList(string $path): bool
+	/** @internal */
+	public static function isPathInWhiteList(string $path): bool
 	{
 		$path = strtr($path, '\\', '/');
 		foreach (self::$pathWhitelist as $mask) {
@@ -172,24 +130,5 @@ class BypassFinals
 		}
 
 		return false;
-	}
-
-
-	/** @return object */
-	private function createUnderlyingWrapper()
-	{
-		$wrapper = new self::$underlyingWrapperClass;
-		$wrapper->context = $this->context;
-		return $wrapper;
-	}
-
-
-	/** @return mixed */
-	public function __call(string $method, array $args)
-	{
-		$wrapper = $this->wrapper ?? $this->createUnderlyingWrapper();
-		return method_exists($wrapper, $method)
-			? $wrapper->$method(...$args)
-			: false;
 	}
 }
