@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DG;
 
+use DG\BypassFinals\NativeWrapper;
+
 
 /**
  * Removes keyword final from source codes.

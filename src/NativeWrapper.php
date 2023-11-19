@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace DG;
+namespace DG\BypassFinals;
 
 
 /**
