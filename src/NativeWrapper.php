@@ -206,6 +206,9 @@ final class NativeWrapper
 		} catch (\RuntimeException $e) {
 			// SplFileInfo::isFile throws exception
 			return false;
+		} catch (\ErrorException $e) {
+			// Warning was converted into an exception by an external error handler
+			return false;
 		}
 	}
 
