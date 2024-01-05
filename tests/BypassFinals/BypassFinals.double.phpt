@@ -17,3 +17,4 @@ DG\BypassFinals::enable();
 Assert::noError(function () {
 	require __DIR__ . '/fixtures/final.class.php';
 });
+LPI LINUX ESSENTIALS IT CLASS

@@ -5,6 +5,8 @@ Bypass Finals
 [![Tests](https://github.com/dg/bypass-finals/workflows/Tests/badge.svg?branch=master)](https://github.com/dg/bypass-finals/actions)
 [![Latest Stable Version](https://poser.pugx.org/dg/bypass-finals/v/stable)](https://github.com/dg/bypass-finals/releases)
 [![License](https://img.shields.io/badge/license-New%20BSD-blue.svg)](https://github.com/dg/bypass-finals/blob/master/license.md)
+Chike Agbazue
+Added this header to the Read Me
 
 
 Introduction
