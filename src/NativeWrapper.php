@@ -198,14 +198,19 @@ final class NativeWrapper
 
 	public function url_stat(string $path, int $flags)
 	{
+		if ($flags & STREAM_URL_STAT_QUIET) {
+			set_error_handler(static fn (): bool => true);
+		}
 		try {
 			$func = $flags & STREAM_URL_STAT_LINK ? 'lstat' : 'stat';
-			return $flags & STREAM_URL_STAT_QUIET
-				? @$this->native($func, $path)
-				: $this->native($func, $path);
+			return $this->native($func, $path);
 		} catch (\RuntimeException $e) {
 			// SplFileInfo::isFile throws exception
 			return false;
+		} finally {
+			if ($flags & STREAM_URL_STAT_QUIET) {
+				restore_error_handler();
+			}
 		}
 	}
 
