@@ -47,7 +47,55 @@ function thoroughErrorHandler(int $number, string $message, string $file, int $l
 Assert::noError(function () {
 	set_error_handler('thoroughErrorHandler');
 
+	file_exists('unknown');
+
+	restore_error_handler();
+});
+
+Assert::noError(function () {
+	set_error_handler('thoroughErrorHandler');
+
+	is_writable('unknown');
+
+	restore_error_handler();
+});
+
+Assert::noError(function () {
+	set_error_handler('thoroughErrorHandler');
+
+	is_readable('unknown');
+
+	restore_error_handler();
+});
+
+Assert::noError(function () {
+	set_error_handler('thoroughErrorHandler');
+
+	is_executable('unknown');
+
+	restore_error_handler();
+});
+
+Assert::noError(function () {
+	set_error_handler('thoroughErrorHandler');
+
+	is_file('unknown');
+
+	restore_error_handler();
+});
+
+Assert::noError(function () {
+	set_error_handler('thoroughErrorHandler');
+
 	is_dir('unknown');
+
+	restore_error_handler();
+});
+
+Assert::noError(function () {
+	set_error_handler('thoroughErrorHandler');
+
+	is_link('unknown');
 
 	restore_error_handler();
 });
