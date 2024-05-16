@@ -25,9 +25,9 @@ final class MutatingWrapper
 
 	public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
 	{
-        if(is_dir($path)) {
+		if(is_dir($path)) {
             return false;
-        }
+		}
 
 		$this->wrapper = $this->createUnderlyingWrapper();
 		if (!$this->wrapper->stream_open($path, $mode, $options, $openedPath)) {
