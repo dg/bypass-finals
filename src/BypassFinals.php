@@ -80,7 +80,7 @@ final class BypassFinals
 	private static function removeTokensCached(string $code): string
 	{
 		$wrapper = new NativeWrapper;
-		$hash = sha1($code);
+		$hash = sha1($code . implode(',', self::$tokens));
 		if (@$wrapper->stream_open(self::$cacheDir . '/' . $hash, 'r')) { // @ may not exist
 			flock($wrapper->handle, LOCK_SH);
 			if ($res = stream_get_contents($wrapper->handle)) {
