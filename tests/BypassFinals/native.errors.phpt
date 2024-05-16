@@ -26,6 +26,10 @@ Assert::error(function () {
 }, E_WARNING);
 
 Assert::error(function () {
+    file_get_contents(__DIR__);
+}, E_NOTICE);
+
+Assert::error(function () {
 	file_put_contents(__DIR__, 'content');
 }, E_WARNING);
 
