@@ -19,6 +19,9 @@ final class PHPUnitExtension implements Extension
 		ParameterCollection $parameters
 	): void
 	{
+		BypassFinals::denyPaths([
+			'*/vendor/phpunit/*',
+		]);
 		BypassFinals::enable();
 	}
 }
