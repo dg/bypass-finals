@@ -9,20 +9,23 @@ use DG\BypassFinals\NativeWrapper;
 
 
 /**
- * Removes keyword final & readonly from source codes.
+ * Removes keyword 'final' & 'readonly' from source codes on-the-fly.
  */
 final class BypassFinals
 {
-	/** @var array */
+	/** @var array  Access rules for allowing or denying paths */
 	private static $accessRules = [];
 
-	/** @var ?string */
+	/** @var ?string  Directory to store cached modified code */
 	private static $cacheDir;
 
-	/** @var array */
+	/** @var array  Tokens that represent 'readonly' and 'final' keywords */
 	private static $tokens = [];
 
 
+	/**
+	 * Enables modification of the source code to bypass 'readonly' and 'final' restrictions.
+	 */
 	public static function enable(bool $bypassReadOnly = true, bool $bypassFinal = true): void
 	{
 		if ($bypassReadOnly && PHP_VERSION_ID >= 80100) {
@@ -32,11 +35,13 @@ final class BypassFinals
 			self::$tokens[T_FINAL] = 'final';
 		}
 
+		// Check if a custom stream wrapper is already in use
 		$wrapper = stream_get_meta_data(fopen(__FILE__, 'r'))['wrapper_data'] ?? null;
 		if ($wrapper instanceof MutatingWrapper) {
 			return;
 		}
 
+		// Set up the custom stream wrapper for code modification
 		MutatingWrapper::$underlyingWrapperClass = $wrapper
 			? get_class($wrapper)
 			: NativeWrapper::class;
@@ -53,6 +58,9 @@ final class BypassFinals
 	}
 
 
+	/**
+	 * Sets the list of file path masks that are allowed for code modification.
+	 */
 	public static function allowPaths(array $masks): void
 	{
 		foreach ($masks as $mask) {
@@ -61,6 +69,9 @@ final class BypassFinals
 	}
 
 
+	/**
+	 * Sets the list of file path masks that are denied for code modification.
+	 */
 	public static function denyPaths(array $masks): void
 	{
 		foreach ($masks as $mask) {
@@ -69,13 +80,19 @@ final class BypassFinals
 	}
 
 
+	/**
+	 * Sets the directory where modified code should be cached.
+	 */
 	public static function setCacheDirectory(?string $dir): void
 	{
 		self::$cacheDir = $dir;
 	}
 
 
-	/** @internal */
+	/**
+	 * Modifies the PHP code by removing specified tokens if they exist.
+	 * @internal
+	 */
 	public static function modifyCode(string $code): string
 	{
 		foreach (self::$tokens as $text) {
@@ -83,7 +100,6 @@ final class BypassFinals
 				return self::$cacheDir
 					? self::removeTokensCached($code)
 					: self::removeTokens($code);
-
 			}
 		}
 
@@ -91,6 +107,9 @@ final class BypassFinals
 	}
 
 
+	/**
+	 * Removes specified tokens from the code and caches the result.
+	 */
 	private static function removeTokensCached(string $code): string
 	{
 		$wrapper = new NativeWrapper;
@@ -113,6 +132,9 @@ final class BypassFinals
 	}
 
 
+	/**
+	 * Removes specified tokens from the code without caching.
+	 */
 	private static function removeTokens(string $code): string
 	{
 		try {
@@ -132,7 +154,10 @@ final class BypassFinals
 	}
 
 
-	/** @internal */
+	/**
+	 * Determines if a given path is allowed for code modification based on the configured rules.
+	 * @internal
+	 */
 	public static function isPathAllowed(string $path): bool
 	{
 		$path = strtr($path, '\\', '/');

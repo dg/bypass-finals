@@ -6,20 +6,20 @@ namespace DG\BypassFinals;
 
 
 /**
- * Wrapper using native functions for working with files and directories.
+ * A stream wrapper class that uses native PHP functions for file and directory operations.
  * @internal
  */
 final class NativeWrapper
 {
 	public const Protocol = 'file';
 
-	/** @var string */
+	/** @var string  Reference to the outer wrapper class for re-registration */
 	public $outerWrapper = MutatingWrapper::class;
 
-	/** @var resource|null */
+	/** @var resource|null  Stream context, which may be set by stream functions */
 	public $context;
 
-	/** @var resource|null */
+	/** @var resource|null  File handle, which may be set by stream functions */
 	public $handle;
 
 
@@ -217,6 +217,9 @@ final class NativeWrapper
 	}
 
 
+	/**
+	 * Temporarily restores the native protocol handler to perform operations.
+	 */
 	private function native(string $func)
 	{
 		stream_wrapper_restore(self::Protocol);
