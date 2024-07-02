@@ -52,11 +52,12 @@ DG\BypassFinals::enable(bypassReadOnly: false);
 To narrow down the application scope of BypassFinals, use a whitelist to specify directories or files:
 
 ```php
-DG\BypassFinals::setWhitelist([
+DG\BypassFinals::allowPaths([
     '*/Nette/*',
 ]);
 ```
 
+Or, conversely, you can specify which paths not to search using `DG\BypassFinals::denyPaths()`. 
 This gives you finer control and can solve issues with certain frameworks and libraries.
 
 Enhance performance by caching transformed files. Make sure the cache directory already exists:

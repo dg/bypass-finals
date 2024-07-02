@@ -14,7 +14,7 @@ use DG\BypassFinals\NativeWrapper;
 final class BypassFinals
 {
 	/** @var array */
-	private static $pathWhitelist = ['*'];
+	private static $accessRules = [];
 
 	/** @var ?string */
 	private static $cacheDir;
@@ -45,13 +45,27 @@ final class BypassFinals
 	}
 
 
-	public static function setWhitelist(array $whitelist): void
+	/** @deprecated use BypassFinals::allowPaths() */
+	public static function setWhitelist(array $masks): void
 	{
-		foreach ($whitelist as &$mask) {
-			$mask = strtr($mask, '\\', '/');
-		}
+		self::$accessRules[true] = [];
+		self::allowPaths($masks);
+	}
 
-		self::$pathWhitelist = $whitelist;
+
+	public static function allowPaths(array $masks): void
+	{
+		foreach ($masks as $mask) {
+			self::$accessRules[true][] = strtr($mask, '\\', '/');
+		}
+	}
+
+
+	public static function denyPaths(array $masks): void
+	{
+		foreach ($masks as $mask) {
+			self::$accessRules[false][] = strtr($mask, '\\', '/');
+		}
 	}
 
 
@@ -119,11 +133,17 @@ final class BypassFinals
 
 
 	/** @internal */
-	public static function isPathInWhiteList(string $path): bool
+	public static function isPathAllowed(string $path): bool
 	{
 		$path = strtr($path, '\\', '/');
-		foreach (self::$pathWhitelist as $mask) {
+		foreach (self::$accessRules[true] ?? ['*'] as $mask) {
 			if (fnmatch($mask, $path)) {
+				foreach (self::$accessRules[false] ?? [] as $mask) {
+					if (fnmatch($mask, $path)) {
+						return false;
+					}
+				}
+
 				return true;
 			}
 		}

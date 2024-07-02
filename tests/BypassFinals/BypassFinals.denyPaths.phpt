@@ -1,6 +1,6 @@
 <?php
 
-// test setWhitelist()
+// test denyPaths()
 
 declare(strict_types=1);
 
@@ -12,7 +12,7 @@ Tester\Environment::setup();
 
 
 DG\BypassFinals::enable();
-DG\BypassFinals::setWhitelist([
+DG\BypassFinals::denyPaths([
 	'*/fixtures/final.class.php',
 ]);
 
@@ -20,7 +20,7 @@ require __DIR__ . '/fixtures/final.class.php';
 require __DIR__ . '/fixtures/final.excluded.class.php';
 
 $rc = new ReflectionClass('FinalClass');
-Assert::false($rc->isFinal());
+Assert::true($rc->isFinal());
 
 $rc = new ReflectionClass('FinalClassExcluded');
-Assert::true($rc->isFinal());
+Assert::false($rc->isFinal());

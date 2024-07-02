@@ -34,7 +34,7 @@ final class MutatingWrapper
 			return false;
 		}
 
-		if ($mode === 'rb' && pathinfo($path, PATHINFO_EXTENSION) === 'php' && BypassFinals::isPathInWhiteList($path)) {
+		if ($mode === 'rb' && pathinfo($path, PATHINFO_EXTENSION) === 'php' && BypassFinals::isPathAllowed($path)) {
 			$content = '';
 			while (!$this->wrapper->stream_eof()) {
 				$content .= $this->wrapper->stream_read(8192);
