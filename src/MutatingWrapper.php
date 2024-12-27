@@ -43,7 +43,7 @@ final class MutatingWrapper
 				$content .= $this->wrapper->stream_read(8192);
 			}
 
-			$modified = BypassFinals::modifyCode($content);
+			$modified = BypassFinals::modifyCode($content, $path);
 			if ($modified === $content) {
 				$this->wrapper->stream_seek(0);
 			} else {
