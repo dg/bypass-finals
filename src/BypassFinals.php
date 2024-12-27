@@ -22,12 +22,28 @@ final class BypassFinals
 	/** @var array  Tokens that represent 'readonly' and 'final' keywords */
 	private static $tokens = [];
 
+	/** @var array<int, array{file: string, line: int, function: string, class?: string, type?: string, args?: array}> Call stack when enable() was called */
+	private static $enableCallStack = [];
+
+	/** @var array<string>  List of userland classes loaded before enable() was called */
+	private static $classesLoadedBeforeEnable = [];
+
+	/** @var array<string>  List of files that were modified */
+	private static $modifiedFiles = [];
+
 
 	/**
 	 * Enables modification of the source code to bypass 'readonly' and 'final' restrictions.
 	 */
 	public static function enable(bool $bypassReadOnly = true, bool $bypassFinal = true): void
 	{
+		if (!self::$enableCallStack) {
+			self::$enableCallStack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+			self::$classesLoadedBeforeEnable = array_filter(get_declared_classes(), function (string $class): bool {
+				return !(new \ReflectionClass($class))->isInternal() && $class !== self::class;
+			});
+		}
+
 		if ($bypassReadOnly && PHP_VERSION_ID >= 80100) {
 			self::$tokens[T_READONLY] = 'readonly';
 		}
@@ -93,13 +109,18 @@ final class BypassFinals
 	 * Modifies the PHP code by removing specified tokens if they exist.
 	 * @internal
 	 */
-	public static function modifyCode(string $code): string
+	public static function modifyCode(string $code, ?string $file = null): string
 	{
 		foreach (self::$tokens as $text) {
 			if (stripos($code, $text) !== false) {
-				return self::$cacheDir
+				$modifiedCode = self::$cacheDir
 					? self::removeTokensCached($code)
 					: self::removeTokens($code);
+				if ($modifiedCode !== $code) {
+					self::$modifiedFiles[] = $file;
+					return $modifiedCode;
+				}
+				return $code;
 			}
 		}
 
@@ -174,5 +195,51 @@ final class BypassFinals
 		}
 
 		return false;
+	}
+
+
+	/**
+	 * Returns debugging information to help diagnose issues.
+	 */
+	public static function debugInfo(): void
+	{
+		echo "<xmp>\n";
+		echo "BypassFinals Debug Information\n";
+		echo "------------------------------\n\n";
+		echo "Configuration:\n";
+		echo "  Bypass 'final': " . (PHP_VERSION_ID >= 80100 && isset(self::$tokens[T_READONLY]) ? 'enabled' : 'disabled') . "\n";
+		echo "  Bypass 'readonly': " . (isset(self::$tokens[T_FINAL]) ? 'enabled' : 'disabled') . "\n";
+
+		echo "\nFrom where BypassFinals::enable() was started:\n";
+		foreach (self::$enableCallStack as $index => $frame) {
+			echo "  #$index ";
+			if (isset($frame['class'])) {
+				echo $frame['class'] . $frame['type'] . $frame['function'] . '()';
+			} elseif (isset($frame['function'])) {
+				echo $frame['function'] . '()';
+			}
+			if (isset($frame['file'])) {
+				echo ' in ' . $frame['file'] . ':' . $frame['line'];
+			}
+			echo "\n";
+		}
+
+		echo "\nClasses already loaded before BypassFinals was started:\n";
+		if (self::$classesLoadedBeforeEnable) {
+			foreach (self::$classesLoadedBeforeEnable as $class) {
+				echo "  - $class\n";
+			}
+		} else {
+			echo "  no classes\n";
+		}
+
+		echo "\nFiles where BypassFinals removed final/readonly:\n";
+		if (self::$modifiedFiles) {
+			foreach (self::$modifiedFiles as $file) {
+				echo "  - $file\n";
+			}
+		} else {
+			echo "  no files were modified\n";
+		}
 	}
 }
