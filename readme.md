@@ -74,6 +74,18 @@ For integration with PHPUnit 10 or newer, simply add BypassFinals as an extensio
 </extensions>
 ```
 
+Optionally you can configure BypassFinals in your `phpunit.xml` file:
+
+```xml
+<extensions>
+    <bootstrap class="Tests\BypassFinalsPHPUnitExtension">
+        <parameter name="bypassFinal" value="true"/>
+        <parameter name="bypassReadOnly" value="false"/>
+        <parameter name="cacheDirectory" value="./cache"/>
+    </bootstrap>
+</extensions>
+```
+
  <!---->
 
 Troubleshooting
