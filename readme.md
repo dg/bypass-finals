@@ -25,7 +25,7 @@ The easiest way to install BypassFinals is via Composer. Just run the following 
 composer require dg/bypass-finals --dev
 ```
 
-It pretty much runs everywhere: PHP 7.1 through 8.3 are all supported!
+It pretty much runs everywhere: PHP 7.1 through 8.4 are all supported!
 
  <!---->
 
@@ -53,11 +53,11 @@ To narrow down the application scope of BypassFinals, use a whitelist to specify
 
 ```php
 DG\BypassFinals::allowPaths([
-    '*/Nette/*',
+	'*/Nette/*',
 ]);
 ```
 
-Or, conversely, you can specify which paths not to search using `DG\BypassFinals::denyPaths()`. 
+Or, conversely, you can specify which paths not to search using `DG\BypassFinals::denyPaths()`.
 This gives you finer control and can solve issues with certain frameworks and libraries.
 
 Enhance performance by caching transformed files. Make sure the cache directory already exists:
