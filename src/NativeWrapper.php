@@ -20,6 +20,8 @@ final class NativeWrapper
 	/** @var resource|null  File handle, which may be set by stream functions */
 	public $handle;
 
+	/** @var bool */
+	private $isProcOpen = false;
 
 	public function dir_closedir(): void
 	{
@@ -79,12 +81,25 @@ final class NativeWrapper
 		return $this->handle;
 	}
 
-
+	// Fix for proc_open(): https://github.com/php/php-src/issues/17943
+	//
+	// TL;DR: stream_close() is incorrectly invoked without passing an extra argument
+	// that would prevent closure of the inner handle when used inside of proc_open's logic.
+	//
+	// To workaround, manually detect fopens from proc_open and:
+	//
+	// 1) Do not fclose handle to avoid FD invalidation
+	// 2) Leak handle to prevent garbage collection of the $this->handle property (& automatic fclosing and FD invalidation)
+	//
+	private static array $handles = []; 
 	public function stream_close(): void
 	{
-		fclose($this->handle);
+		if ($this->isProcOpen) {
+			self::$handles []= $this->handle;
+		} else {
+			fclose($this->handle);
+		}
 	}
-
 
 	public function stream_eof(): bool
 	{
@@ -127,6 +142,9 @@ final class NativeWrapper
 
 	public function stream_open(string $path, string $mode, int $options = 0, ?string &$openedPath = null): bool
 	{
+		if (debug_backtrace(0, 3)[2]['function'] === 'proc_open') {
+			$this->isProcOpen = true;
+		}
 		$usePath = (bool) ($options & STREAM_USE_PATH);
 		$this->handle = $this->context
 			? $this->native('fopen', $path, $mode, $usePath, $this->context)
