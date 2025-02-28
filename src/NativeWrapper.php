@@ -20,6 +20,12 @@ final class NativeWrapper
 	/** @var resource|null  File handle, which may be set by stream functions */
 	public $handle;
 
+	/** @var list<resource> */
+	private static $handles = [];
+
+	/** @var bool */
+	private $isProcOpen = false;
+
 	/** @var bool  EOF is deferred until an empty read confirms it, matching native file:// handler semantics */
 	private $eofAfterEmptyRead = false;
 
@@ -85,7 +91,11 @@ final class NativeWrapper
 
 	public function stream_close(): void
 	{
-		fclose($this->handle);
+		if ($this->isProcOpen) {
+			self::$handles[] = $this->handle;
+		} else {
+			fclose($this->handle);
+		}
 	}
 
 
@@ -130,6 +140,7 @@ final class NativeWrapper
 
 	public function stream_open(string $path, string $mode, int $options = 0, ?string &$openedPath = null): bool
 	{
+		$this->isProcOpen = debug_backtrace(0, 3)[2]['function'] === 'proc_open';
 		$usePath = (bool) ($options & STREAM_USE_PATH);
 		$this->handle = $this->context
 			? $this->native('fopen', $path, $mode, $usePath, $this->context)
