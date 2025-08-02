@@ -2,13 +2,10 @@
 
 use Tester\Assert;
 
-require __DIR__ . '/../../vendor/autoload.php';
-
-Tester\Environment::setup();
+require __DIR__ . '/../bootstrap.php';
 
 
-@mkdir($dir = __DIR__ . '/cache');
-DG\BypassFinals::setCacheDirectory($dir);
+DG\BypassFinals::setCacheDirectory(getTempDir());
 
 DG\BypassFinals::enable();
 
