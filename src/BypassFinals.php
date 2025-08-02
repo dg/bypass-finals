@@ -5,6 +5,7 @@ namespace DG;
 use DG\BypassFinals\MutatingWrapper;
 use DG\BypassFinals\NativeWrapper;
 
+const T_READONLY = PHP_VERSION_ID >= 80100 ? T_READONLY : -1;
 
 /**
  * Removes keyword 'final' & 'readonly' from source codes on-the-fly.
@@ -42,7 +43,7 @@ final class BypassFinals
 			});
 		}
 
-		if ($bypassReadOnly && PHP_VERSION_ID >= 80100) {
+		if ($bypassReadOnly) {
 			self::$tokens[T_READONLY] = 'readonly';
 		}
 		if ($bypassFinal) {
@@ -206,7 +207,7 @@ final class BypassFinals
 		echo "BypassFinals Debug Information\n";
 		echo "------------------------------\n\n";
 		echo "Configuration:\n";
-		echo "  Bypass 'final': " . (PHP_VERSION_ID >= 80100 && isset(self::$tokens[T_READONLY]) ? 'enabled' : 'disabled') . "\n";
+		echo "  Bypass 'final': " . (isset(self::$tokens[T_READONLY]) ? 'enabled' : 'disabled') . "\n";
 		echo "  Bypass 'readonly': " . (isset(self::$tokens[T_FINAL]) ? 'enabled' : 'disabled') . "\n";
 
 		echo "\nFrom where BypassFinals::enable() was started:\n";
