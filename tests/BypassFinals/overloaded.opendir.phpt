@@ -4,25 +4,27 @@
 
 use Tester\Assert;
 
-require __DIR__ . '/../../vendor/autoload.php';
+require __DIR__ . '/../bootstrap.php';
 
-Tester\Environment::setup();
 
+function listDir(string $path): array
+{
+	$files = [];
+	$dir = opendir($path);
+	while (($file = readdir($dir)) !== false) {
+		$files[] = $file;
+	}
+	closedir($dir);
+	sort($files);
+	return $files;
+}
+
+
+// snapshot taken via the native handler, before BypassFinals is enabled
+$expected = listDir(__DIR__ . '/fixtures');
+Assert::true(count($expected) > 2); // sanity: more than just '.' and '..'
 
 DG\BypassFinals::enable();
 
-$dir = opendir(__DIR__ . '/fixtures');
-while (($file = readdir($dir)) !== false) {
-	$files[] = $file;
-}
-closedir($dir);
-
-sort($files);
-Assert::same([
-	'.',
-	'..',
-	'final.class.php',
-	'final.excluded.class.php',
-	'final.readonly.class.php',
-	'magic.constants.php',
-], $files);
+// the overloaded handler must return exactly the same listing
+Assert::same($expected, listDir(__DIR__ . '/fixtures'));

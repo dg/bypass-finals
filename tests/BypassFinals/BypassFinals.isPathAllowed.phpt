@@ -5,9 +5,7 @@
 use DG\BypassFinals;
 use Tester\Assert;
 
-require __DIR__ . '/../../vendor/autoload.php';
-
-Tester\Environment::setup();
+require __DIR__ . '/../bootstrap.php';
 
 Assert::with(BypassFinals::class, function () {
 	Assert::true(BypassFinals::isPathAllowed(__DIR__ . '/fixtures/final.class.php'));
