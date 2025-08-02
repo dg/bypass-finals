@@ -167,13 +167,39 @@ final class BypassFinals
 		}
 
 		$code = '';
-		foreach ($tokens as $token) {
-			$code .= is_array($token)
-				? (isset(self::$tokens[$token[0]]) ? '' : $token[1])
-				: $token;
+		foreach ($tokens as $i => $token) {
+			if (!is_array($token)) {
+				$code .= $token;
+			} elseif (!isset(self::$tokens[$token[0]]) || !self::shouldRemoveToken($tokens, $i)) {
+				$code .= $token[1];
+			}
 		}
 
 		return $code;
+	}
+
+
+	/**
+	 * Determines if a token should be removed based on its context.
+	 */
+	private static function shouldRemoveToken(array $tokens, int $index): bool
+	{
+		$tokenType = $tokens[$index][0];
+
+		if ($tokenType === T_FINAL) {
+			for ($index++; $index < count($tokens); $index++) {
+				$token = $tokens[$index];
+				if (is_array($token) && $token[0] === T_WHITESPACE) {
+					continue;
+				}
+
+				return is_array($token) && in_array($token[0], [T_CLASS, T_FUNCTION, T_READONLY], true);
+			}
+		} elseif ($tokenType === T_READONLY) {
+			return true;
+		}
+
+		return false;
 	}
 
 

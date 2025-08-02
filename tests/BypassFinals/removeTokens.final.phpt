@@ -25,6 +25,7 @@ declare(strict_types=1);
  class FinalClass
 {
 	const FINAL = 123;
+	const X = self::FINAL;
 
 	 function finalMethod()
 	{
