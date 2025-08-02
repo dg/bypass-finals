@@ -145,7 +145,9 @@ final class NativeWrapper
 
 	public function stream_seek(int $offset, int $whence = SEEK_SET): bool
 	{
-		return fseek($this->handle, $offset, $whence) === 0;
+		return stream_get_meta_data($this->handle)['seekable']
+			? fseek($this->handle, $offset, $whence) === 0
+			: false;
 	}
 
 
