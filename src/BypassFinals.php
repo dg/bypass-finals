@@ -155,8 +155,9 @@ final class BypassFinals
 
 	/**
 	 * Removes specified tokens from the code without caching.
+	 * @internal
 	 */
-	private static function removeTokens(string $code): string
+	public static function removeTokens(string $code): string
 	{
 		try {
 			$tokens = token_get_all($code, TOKEN_PARSE);
