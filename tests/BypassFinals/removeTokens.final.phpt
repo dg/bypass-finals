@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
 /** @phpVersion 8.2 */
-
-declare(strict_types=1);
 
 use Tester\Assert;
 
@@ -19,8 +17,7 @@ $originalCode = file_get_contents(__DIR__ . '/fixtures/final.class.php');
 $modifiedCode = DG\BypassFinals::removeTokens($originalCode);
 
 Assert::match(<<<'XX'
-<?php
-declare(strict_types=1);
+<?php declare(strict_types=1);
 
  class FinalClass
 {

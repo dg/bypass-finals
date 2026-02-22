@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
 /** @phpVersion 8.2 */
-
-declare(strict_types=1);
 
 use Tester\Assert;
 

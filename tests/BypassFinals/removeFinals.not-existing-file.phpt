@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
 // test that removing finals is done only in reading mode
-
-declare(strict_types=1);
 
 use Tester\Assert;
 

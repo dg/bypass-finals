@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
 // test native php functions - for comparison with overloaded.errors.phpt
-
-declare(strict_types=1);
 
 use Tester\Assert;
 
