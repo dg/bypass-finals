@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
 // test overloaded file_put_contents() with lock
-
-declare(strict_types=1);
 
 use Tester\Assert;
 

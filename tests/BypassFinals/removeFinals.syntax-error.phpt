@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
 // test that removeFinals() catches token_get_all() exception
-
-declare(strict_types=1);
 
 use Tester\Assert;
 

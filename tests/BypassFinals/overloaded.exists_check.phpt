@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
 // test that overloaded "exists-check" functions (see php-src/ext/standard/filestat.c) must not invoke the error handler
-
-declare(strict_types=1);
 
 use Tester\Assert;
 

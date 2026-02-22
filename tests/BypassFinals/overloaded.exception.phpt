@@ -1,8 +1,6 @@
-<?php
+<?php declare(strict_types=1);
 
 // test to make sure to restore the stream wrapper even when an exception is throw
-
-declare(strict_types=1);
 
 use Tester\Assert;
 
