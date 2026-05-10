@@ -143,6 +143,7 @@ final class BypassFinals
 
 		$code = self::removeTokens($code);
 
+		@mkdir(self::$cacheDir, 0777, true);
 		if (@$wrapper->stream_open(self::$cacheDir . '/' . $hash, 'x')) { // @ may exist
 			flock($wrapper->handle, LOCK_EX);
 			fwrite($wrapper->handle, $code);
