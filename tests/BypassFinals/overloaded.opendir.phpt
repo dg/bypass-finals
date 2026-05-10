@@ -21,6 +21,7 @@ sort($files);
 Assert::same([
 	'.',
 	'..',
+	'final.attributes.class.php',
 	'final.class.php',
 	'final.excluded.class.php',
 	'final.readonly.class.php',
