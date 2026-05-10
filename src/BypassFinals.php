@@ -168,8 +168,16 @@ final class BypassFinals
 		foreach ($tokens as $i => $token) {
 			if (!is_array($token)) {
 				$code .= $token;
-			} elseif (!isset(self::$tokens[$token[0]]) || !self::shouldRemoveToken($tokens, $i)) {
+			} elseif (!isset(self::$tokens[$token[0]])) {
 				$code .= $token[1];
+			} else {
+				$action = self::shouldRemoveToken($tokens, $i);
+				if ($action === false) {
+					$code .= $token[1];
+				} elseif (is_string($action)) {
+					$code .= $action;
+				}
+				// true = remove, nothing added
 			}
 		}
 
@@ -178,9 +186,12 @@ final class BypassFinals
 
 
 	/**
-	 * Determines if a token should be removed based on its context.
+	 * Determines if a token should be removed or replaced based on its context.
+	 * Returns true to remove, false to keep, or a string to use as replacement.
+	 *
+	 * @return bool|string
 	 */
-	private static function shouldRemoveToken(array $tokens, int $index): bool
+	private static function shouldRemoveToken(array $tokens, int $index)
 	{
 		$tokenType = $tokens[$index][0];
 
@@ -194,7 +205,40 @@ final class BypassFinals
 				return is_array($token) && in_array($token[0], [T_CLASS, T_FUNCTION, T_READONLY], true);
 			}
 		} elseif ($tokenType === T_READONLY) {
-			return true;
+			// "readonly class" / "final readonly class": next non-whitespace is T_CLASS -> remove
+			for ($j = $index + 1; $j < count($tokens); $j++) {
+				$t = $tokens[$j];
+				if (is_array($t) && $t[0] === T_WHITESPACE) {
+					continue;
+				}
+				if (is_array($t) && $t[0] === T_CLASS) {
+					return true;
+				}
+				break;
+			}
+
+			// Property or promoted parameter: scan backwards for a visibility modifier.
+			// If none is found, replace "readonly" with "public" to preserve the promoted
+			// property (a visibility-less "readonly T $x" in a constructor is valid PHP 8.4+,
+			// but stripping readonly without adding public would turn it into a plain argument).
+			for ($j = $index - 1; $j >= 0; $j--) {
+				$t = $tokens[$j];
+				if (!is_array($t)) {
+					return 'public';
+				}
+				if ($t[0] === T_WHITESPACE || $t[0] === T_COMMENT || $t[0] === T_DOC_COMMENT) {
+					continue;
+				}
+				if (in_array($t[0], [T_PUBLIC, T_PROTECTED, T_PRIVATE], true)) {
+					return true;
+				}
+				if ($t[0] === T_STATIC) {
+					continue;
+				}
+				return 'public';
+			}
+
+			return 'public';
 		}
 
 		return false;

@@ -24,5 +24,6 @@ Assert::same([
 	'final.class.php',
 	'final.excluded.class.php',
 	'final.readonly.class.php',
+	'final.readonly.noinit.class.php',
 	'magic.constants.php',
 ], $files);
