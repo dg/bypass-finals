@@ -132,23 +132,36 @@ final class BypassFinals
 	 */
 	private static function removeTokensCached(string $code): string
 	{
-		$wrapper = new NativeWrapper;
 		$hash = sha1($code . implode(',', self::$tokens));
-		if (@$wrapper->stream_open(self::$cacheDir . '/' . $hash, 'r')) { // @ may not exist
-			flock($wrapper->handle, LOCK_SH);
-			if ($res = stream_get_contents($wrapper->handle)) {
-				return $res;
+		$file = self::$cacheDir . '/' . $hash;
+
+		// All cache I/O in a single native context to avoid multiple stream_wrapper_restore
+		// cycles inside an already-active MutatingWrapper stream_open callback, which
+		// corrupts PHP's internal stream wrapper state.
+		stream_wrapper_restore(NativeWrapper::Protocol);
+		try {
+			if ($handle = @fopen($file, 'r')) { // @ may not exist
+				flock($handle, LOCK_SH);
+				$cached = stream_get_contents($handle);
+				fclose($handle);
+				if ($cached) {
+					return $cached;
+				}
 			}
+
+			$code = self::removeTokens($code);
+
+			if ($handle = @fopen($file, 'x')) { // @ may exist
+				flock($handle, LOCK_EX);
+				fwrite($handle, $code);
+				fclose($handle);
+			}
+
+			return $code;
+		} finally {
+			stream_wrapper_unregister(NativeWrapper::Protocol);
+			stream_wrapper_register(NativeWrapper::Protocol, MutatingWrapper::class);
 		}
-
-		$code = self::removeTokens($code);
-
-		if (@$wrapper->stream_open(self::$cacheDir . '/' . $hash, 'x')) { // @ may exist
-			flock($wrapper->handle, LOCK_EX);
-			fwrite($wrapper->handle, $code);
-		}
-
-		return $code;
 	}
 
 
