@@ -151,6 +151,7 @@ final class BypassFinals
 
 			$code = self::removeTokens($code);
 
+			@mkdir(self::$cacheDir, 0777, true);
 			if ($handle = @fopen($file, 'x')) { // @ may exist
 				flock($handle, LOCK_EX);
 				fwrite($handle, $code);
