@@ -7,7 +7,7 @@ namespace DG\BypassFinals;
  * A stream wrapper class that uses native PHP functions for file and directory operations.
  * @internal
  */
-final class NativeWrapper
+final class NativeWrapper implements StreamWrapper
 {
 	public const Protocol = 'file';
 

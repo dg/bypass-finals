@@ -7,6 +7,7 @@
 //   require __DIR__ . '/../vendor/dg/bypass-finals/src/bootstrap.php';
 //   require __DIR__ . '/../vendor/autoload.php';
 
+require_once __DIR__ . '/StreamWrapper.php';
 require_once __DIR__ . '/NativeWrapper.php';
 require_once __DIR__ . '/MutatingWrapper.php';
 require_once __DIR__ . '/BypassFinals.php';
