@@ -151,7 +151,8 @@ final class BypassFinals
 
 			$code = self::removeTokens($code);
 
-			if ($handle = @fopen($file, 'x')) { // @ may exist
+			@mkdir(self::$cacheDir, 0777, true);
+      if ($handle = @fopen($file, 'x')) { // @ may exist
 				flock($handle, LOCK_EX);
 				fwrite($handle, $code);
 				fclose($handle);
@@ -246,8 +247,8 @@ final class BypassFinals
 		echo "BypassFinals Debug Information\n";
 		echo "------------------------------\n\n";
 		echo "Configuration:\n";
-		echo "  Bypass 'final': " . (isset(self::$tokens[T_READONLY]) ? 'enabled' : 'disabled') . "\n";
-		echo "  Bypass 'readonly': " . (isset(self::$tokens[T_FINAL]) ? 'enabled' : 'disabled') . "\n";
+		echo "  Bypass 'final': " . (isset(self::$tokens[T_FINAL]) ? 'enabled' : 'disabled') . "\n";
+		echo "  Bypass 'readonly': " . (isset(self::$tokens[T_READONLY]) ? 'enabled' : 'disabled') . "\n";
 
 		echo "\nFrom where BypassFinals::enable() was started:\n";
 		foreach (self::$enableCallStack as $index => $frame) {
