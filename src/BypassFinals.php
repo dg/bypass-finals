@@ -242,8 +242,8 @@ final class BypassFinals
 		echo "BypassFinals Debug Information\n";
 		echo "------------------------------\n\n";
 		echo "Configuration:\n";
-		echo "  Bypass 'final': " . (isset(self::$tokens[T_READONLY]) ? 'enabled' : 'disabled') . "\n";
-		echo "  Bypass 'readonly': " . (isset(self::$tokens[T_FINAL]) ? 'enabled' : 'disabled') . "\n";
+		echo "  Bypass 'final': " . (isset(self::$tokens[T_FINAL]) ? 'enabled' : 'disabled') . "\n";
+		echo "  Bypass 'readonly': " . (isset(self::$tokens[T_READONLY]) ? 'enabled' : 'disabled') . "\n";
 
 		echo "\nFrom where BypassFinals::enable() was started:\n";
 		foreach (self::$enableCallStack as $index => $frame) {
