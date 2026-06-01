@@ -20,6 +20,9 @@ final class NativeWrapper
 	/** @var resource|null  File handle, which may be set by stream functions */
 	public $handle;
 
+	/** @var bool  EOF is deferred until an empty read confirms it, matching native file:// handler semantics */
+	private $eofAfterEmptyRead = false;
+
 
 	public function dir_closedir(): void
 	{
@@ -88,7 +91,7 @@ final class NativeWrapper
 
 	public function stream_eof(): bool
 	{
-		return feof($this->handle);
+		return $this->eofAfterEmptyRead;
 	}
 
 
@@ -137,15 +140,24 @@ final class NativeWrapper
 
 	public function stream_read(int $count)
 	{
-		return fread($this->handle, $count);
+		$data = fread($this->handle, $count);
+		if ($data === '' || $data === false) {
+			$this->eofAfterEmptyRead = true;
+		}
+		return $data;
 	}
 
 
 	public function stream_seek(int $offset, int $whence = SEEK_SET): bool
 	{
-		return stream_get_meta_data($this->handle)['seekable']
-			? fseek($this->handle, $offset, $whence) === 0
-			: false;
+		if (!stream_get_meta_data($this->handle)['seekable']) {
+			return false;
+		}
+		$result = fseek($this->handle, $offset, $whence) === 0;
+		if ($result) {
+			$this->eofAfterEmptyRead = false;
+		}
+		return $result;
 	}
 
 
