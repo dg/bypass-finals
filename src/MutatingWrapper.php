@@ -11,13 +11,18 @@ use DG\BypassFinals;
  */
 final class MutatingWrapper
 {
-	/** @var class-string  Specifies the class of the underlying normal wrapper */
+	/** @var class-string<StreamWrapper>  Specifies the class of the underlying normal wrapper */
 	public static string $underlyingWrapperClass;
 
 	/** @var resource|null  Stream context, which may be set by stream functions */
 	public $context;
 
-	/** Instance of the actual underlying wrapper used for file operations */
+	/**
+	 * Instance of the actual underlying wrapper used for file operations.
+	 * Native type is left as object so a pre-existing foreign 'file' wrapper (which only
+	 * follows the protocol via duck-typing, without extending StreamWrapper) is accepted at runtime.
+	 * @var StreamWrapper|null
+	 */
 	private ?object $wrapper = null;
 
 
@@ -72,6 +77,8 @@ final class MutatingWrapper
 
 	/**
 	 * Instantiates the underlying wrapper.
+	 * Native return type is object (not StreamWrapper) so a pre-existing foreign 'file' wrapper is accepted at runtime.
+	 * @return StreamWrapper
 	 */
 	private function createUnderlyingWrapper(): object
 	{
