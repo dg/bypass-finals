@@ -30,6 +30,9 @@ final class MutatingWrapper
 			return false;
 		}
 
+		// is_dir() populates the stat cache; clear it so subsequent stat calls return fresh data
+		clearstatcache(true, $path);
+
 		$this->wrapper = $this->createUnderlyingWrapper();
 		if (!$this->wrapper->stream_open($path, $mode, $options, $openedPath)) {
 			return false;
