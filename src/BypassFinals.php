@@ -47,7 +47,8 @@ final class BypassFinals
 		}
 
 		// Check if a custom stream wrapper is already in use
-		$wrapper = stream_get_meta_data(fopen(__FILE__, 'r'))['wrapper_data'] ?? null;
+		$handle = fopen(__FILE__, 'r') ?: throw new \RuntimeException('Unable to open ' . __FILE__);
+		$wrapper = stream_get_meta_data($handle)['wrapper_data'] ?? null;
 		if ($wrapper instanceof MutatingWrapper) {
 			return;
 		}
@@ -117,7 +118,9 @@ final class BypassFinals
 					? self::removeTokensCached($code)
 					: self::removeTokens($code);
 				if ($modifiedCode !== $code) {
-					self::$modifiedFiles[] = $file;
+					if ($file !== null) {
+						self::$modifiedFiles[] = $file;
+					}
 					return $modifiedCode;
 				}
 				return $code;
@@ -133,8 +136,9 @@ final class BypassFinals
 	 */
 	private static function removeTokensCached(string $code): string
 	{
+		$cacheDir = self::$cacheDir ?? throw new \LogicException('Cache directory is not set.');
 		$hash = sha1($code . implode(',', self::$tokens));
-		$file = self::$cacheDir . '/' . $hash;
+		$file = $cacheDir . '/' . $hash;
 
 		// All cache I/O in a single native context to avoid multiple stream_wrapper_restore
 		// cycles inside an already-active MutatingWrapper stream_open callback, which
@@ -152,7 +156,7 @@ final class BypassFinals
 
 			$code = self::removeTokens($code);
 
-			@mkdir(self::$cacheDir, 0o777, true);
+			@mkdir($cacheDir, 0o777, true);
 			if ($handle = @fopen($file, 'x')) { // @ may exist
 				flock($handle, LOCK_EX);
 				fwrite($handle, $code);
@@ -265,12 +269,12 @@ final class BypassFinals
 		echo "\nFrom where BypassFinals::enable() was started:\n";
 		foreach (self::$enableCallStack as $index => $frame) {
 			echo "  #$index ";
-			if (isset($frame['class'])) {
+			if (isset($frame['class'], $frame['type'])) {
 				echo $frame['class'] . $frame['type'] . $frame['function'] . '()';
-			} elseif (isset($frame['function'])) {
+			} else {
 				echo $frame['function'] . '()';
 			}
-			if (isset($frame['file'])) {
+			if (isset($frame['file'], $frame['line'])) {
 				echo ' in ' . $frame['file'] . ':' . $frame['line'];
 			}
 			echo "\n";

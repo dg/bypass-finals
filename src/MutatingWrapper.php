@@ -54,10 +54,11 @@ final class MutatingWrapper
 				$this->wrapper->stream_seek(0);
 			} else {
 				$this->wrapper->stream_close();
-				$this->wrapper = new NativeWrapper;
-				$this->wrapper->handle = tmpfile();
-				$this->wrapper->stream_write($modified);
-				$this->wrapper->stream_seek(0);
+				$wrapper = new NativeWrapper;
+				$wrapper->handle = tmpfile() ?: throw new \RuntimeException('Unable to create a temporary file.');
+				$wrapper->stream_write($modified);
+				$wrapper->stream_seek(0);
+				$this->wrapper = $wrapper;
 			}
 		}
 

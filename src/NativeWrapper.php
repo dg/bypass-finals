@@ -91,9 +91,9 @@ final class NativeWrapper implements StreamWrapper
 	public function stream_close(): void
 	{
 		if ($this->isProcOpen) {
-			self::$handles[] = $this->handle;
+			self::$handles[] = $this->getHandle();
 		} else {
-			fclose($this->handle);
+			fclose($this->getHandle());
 		}
 	}
 
@@ -106,13 +106,13 @@ final class NativeWrapper implements StreamWrapper
 
 	public function stream_flush(): bool
 	{
-		return fflush($this->handle);
+		return fflush($this->getHandle());
 	}
 
 
 	public function stream_lock(int $operation): bool
 	{
-		return !$operation || flock($this->handle, $operation);
+		return !$operation || flock($this->getHandle(), $operation);
 	}
 
 
@@ -141,7 +141,7 @@ final class NativeWrapper implements StreamWrapper
 
 	public function stream_read(int $count): string|false
 	{
-		$data = fread($this->handle, $count);
+		$data = fread($this->getHandle(), $count);
 		if ($data === '' || $data === false) {
 			$this->eofAfterEmptyRead = true;
 		}
@@ -151,10 +151,11 @@ final class NativeWrapper implements StreamWrapper
 
 	public function stream_seek(int $offset, int $whence = SEEK_SET): bool
 	{
-		if (!stream_get_meta_data($this->handle)['seekable']) {
+		$handle = $this->getHandle();
+		if (!stream_get_meta_data($handle)['seekable']) {
 			return false;
 		}
-		$result = fseek($this->handle, $offset, $whence) === 0;
+		$result = fseek($handle, $offset, $whence) === 0;
 		if ($result) {
 			$this->eofAfterEmptyRead = false;
 		}
@@ -165,10 +166,10 @@ final class NativeWrapper implements StreamWrapper
 	public function stream_set_option(int $option, int $arg1, ?int $arg2): int|bool
 	{
 		return match ($option) {
-			STREAM_OPTION_BLOCKING => stream_set_blocking($this->handle, (bool) $arg1),
-			STREAM_OPTION_READ_BUFFER => stream_set_read_buffer($this->handle, $arg2),
-			STREAM_OPTION_WRITE_BUFFER => stream_set_write_buffer($this->handle, $arg2),
-			STREAM_OPTION_READ_TIMEOUT => stream_set_timeout($this->handle, $arg1, $arg2),
+			STREAM_OPTION_BLOCKING => stream_set_blocking($this->getHandle(), (bool) $arg1),
+			STREAM_OPTION_READ_BUFFER => stream_set_read_buffer($this->getHandle(), $arg2 ?? 0),
+			STREAM_OPTION_WRITE_BUFFER => stream_set_write_buffer($this->getHandle(), $arg2 ?? 0),
+			STREAM_OPTION_READ_TIMEOUT => stream_set_timeout($this->getHandle(), $arg1, $arg2 ?? 0),
 			default => false,
 		};
 	}
@@ -177,25 +178,25 @@ final class NativeWrapper implements StreamWrapper
 	/** @return array<int|string, int> */
 	public function stream_stat(): array
 	{
-		return fstat($this->handle);
+		return fstat($this->getHandle());
 	}
 
 
 	public function stream_tell(): int
 	{
-		return ftell($this->handle);
+		return ftell($this->getHandle());
 	}
 
 
 	public function stream_truncate(int $newSize): bool
 	{
-		return ftruncate($this->handle, $newSize);
+		return ftruncate($this->getHandle(), $newSize);
 	}
 
 
 	public function stream_write(string $data): int|false
 	{
-		return fwrite($this->handle, $data);
+		return fwrite($this->getHandle(), $data);
 	}
 
 
@@ -222,6 +223,13 @@ final class NativeWrapper implements StreamWrapper
 				restore_error_handler();
 			}
 		}
+	}
+
+
+	/** @return resource */
+	private function getHandle()
+	{
+		return $this->handle ?? throw new \LogicException('The stream handle is not open.');
 	}
 
 
