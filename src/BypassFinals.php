@@ -10,16 +10,16 @@ use DG\BypassFinals\NativeWrapper;
  */
 final class BypassFinals
 {
-	/** Access rules for allowing or denying paths */
+	/** @var array<int, list<string>> Access rules for allowing or denying paths */
 	private static array $accessRules = [];
 
 	/** Directory to store cached modified code */
 	private static ?string $cacheDir = null;
 
-	/** Tokens that represent 'readonly' and 'final' keywords */
+	/** @var array<int, string> Tokens that represent 'readonly' and 'final' keywords */
 	private static array $tokens = [];
 
-	/** @var array<int, array{file: string, line: int, function: string, class?: string, type?: string, args?: array}> Call stack when enable() was called */
+	/** @var list<array{function: string, line?: int, file?: string, class?: string, type?: string}> Call stack when enable() was called */
 	private static array $enableCallStack = [];
 
 	/** @var array<string>  List of userland classes loaded before enable() was called */
@@ -61,7 +61,10 @@ final class BypassFinals
 	}
 
 
-	/** @deprecated use BypassFinals::allowPaths() */
+	/**
+	 * @param  string[]  $masks
+	 * @deprecated use BypassFinals::allowPaths()
+	 */
 	public static function setWhitelist(array $masks): void
 	{
 		self::$accessRules[true] = [];
@@ -71,6 +74,7 @@ final class BypassFinals
 
 	/**
 	 * Sets the list of file path masks that are allowed for code modification.
+	 * @param  string[]  $masks
 	 */
 	public static function allowPaths(array $masks): void
 	{
@@ -82,6 +86,7 @@ final class BypassFinals
 
 	/**
 	 * Sets the list of file path masks that are denied for code modification.
+	 * @param  string[]  $masks
 	 */
 	public static function denyPaths(array $masks): void
 	{

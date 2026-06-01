@@ -11,7 +11,7 @@ use DG\BypassFinals;
  */
 final class MutatingWrapper
 {
-	/** Specifies the class of the underlying normal wrapper */
+	/** @var class-string  Specifies the class of the underlying normal wrapper */
 	public static string $underlyingWrapperClass;
 
 	/** @var resource|null  Stream context, which may be set by stream functions */
@@ -83,6 +83,7 @@ final class MutatingWrapper
 
 	/**
 	 * Delegates the handling of file/directory operations to the underlying wrapper.
+	 * @param  mixed[]  $args
 	 */
 	public function __call(string $method, array $args): mixed
 	{
