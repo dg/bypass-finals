@@ -25,8 +25,6 @@ The easiest way to install BypassFinals is via Composer. Just run the following 
 composer require dg/bypass-finals --dev
 ```
 
-It pretty much runs everywhere: PHP 7.1 through 8.4 are all supported!
-
  <!---->
 
 Usage
