@@ -91,7 +91,21 @@ Optionally you can configure BypassFinals in your `phpunit.xml` file:
 Troubleshooting
 ---------------
 
-If you encounter issues with BypassFinals not working as expected, you can use the `debugInfo()` method to gain insights into its internal state. Calling this method will output valuable information to help diagnose the problem:
+**Class is still final after enabling BypassFinals**
+
+BypassFinals can only strip the `final` keyword from files loaded *after* `enable()` is called. If a class is loaded before that — for example via a `files` entry in a package's `autoload` configuration, which Composer loads during `require 'vendor/autoload.php'` — the class will remain final.
+
+To handle this, include `src/bootstrap.php` *before* `vendor/autoload.php` in your test bootstrap file:
+
+```php
+// tests/bootstrap.php
+require __DIR__ . '/../vendor/dg/bypass-finals/src/bootstrap.php';
+require __DIR__ . '/../vendor/autoload.php';
+```
+
+This activates the stream wrapper early enough to intercept every file loaded during autoloading.
+
+If you encounter other issues with BypassFinals not working as expected, you can use the `debugInfo()` method to gain insights into its internal state. Calling this method will output valuable information to help diagnose the problem:
 
 ```php
 DG\BypassFinals::debugInfo();
