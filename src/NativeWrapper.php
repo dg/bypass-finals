@@ -11,8 +11,8 @@ final class NativeWrapper
 {
 	public const Protocol = 'file';
 
-	/** @var string  Reference to the outer wrapper class for re-registration */
-	public $outerWrapper = MutatingWrapper::class;
+	/** Reference to the outer wrapper class for re-registration */
+	public string $outerWrapper = MutatingWrapper::class;
 
 	/** @var resource|null  Stream context, which may be set by stream functions */
 	public $context;
@@ -21,13 +21,12 @@ final class NativeWrapper
 	public $handle;
 
 	/** @var list<resource> */
-	private static $handles = [];
+	private static array $handles = [];
 
-	/** @var bool */
-	private $isProcOpen = false;
+	private bool $isProcOpen = false;
 
-	/** @var bool  EOF is deferred until an empty read confirms it, matching native file:// handler semantics */
-	private $eofAfterEmptyRead = false;
+	/** EOF is deferred until an empty read confirms it, matching native file:// handler semantics */
+	private bool $eofAfterEmptyRead = false;
 
 
 	public function dir_closedir(): void
@@ -45,7 +44,7 @@ final class NativeWrapper
 	}
 
 
-	public function dir_readdir()
+	public function dir_readdir(): string|false
 	{
 		return readdir($this->handle);
 	}
@@ -83,7 +82,7 @@ final class NativeWrapper
 	}
 
 
-	public function stream_cast(int $castAs)
+	public function stream_cast(int $castAs): mixed
 	{
 		return $this->handle;
 	}
@@ -117,7 +116,7 @@ final class NativeWrapper
 	}
 
 
-	public function stream_metadata(string $path, int $option, $value): bool
+	public function stream_metadata(string $path, int $option, mixed $value): bool
 	{
 		return match ($option) {
 			STREAM_META_TOUCH => $this->native('touch', $path, $value[0] ?? time(), $value[1] ?? time()),
@@ -140,7 +139,7 @@ final class NativeWrapper
 	}
 
 
-	public function stream_read(int $count)
+	public function stream_read(int $count): string|false
 	{
 		$data = fread($this->handle, $count);
 		if ($data === '' || $data === false) {
@@ -163,7 +162,7 @@ final class NativeWrapper
 	}
 
 
-	public function stream_set_option(int $option, int $arg1, ?int $arg2)
+	public function stream_set_option(int $option, int $arg1, ?int $arg2): int|bool
 	{
 		return match ($option) {
 			STREAM_OPTION_BLOCKING => stream_set_blocking($this->handle, (bool) $arg1),
@@ -175,13 +174,13 @@ final class NativeWrapper
 	}
 
 
-	public function stream_stat()
+	public function stream_stat(): array
 	{
 		return fstat($this->handle);
 	}
 
 
-	public function stream_tell()
+	public function stream_tell(): int
 	{
 		return ftell($this->handle);
 	}
@@ -193,7 +192,7 @@ final class NativeWrapper
 	}
 
 
-	public function stream_write(string $data)
+	public function stream_write(string $data): int|false
 	{
 		return fwrite($this->handle, $data);
 	}
@@ -205,7 +204,7 @@ final class NativeWrapper
 	}
 
 
-	public function url_stat(string $path, int $flags)
+	public function url_stat(string $path, int $flags): array|false
 	{
 		if ($flags & STREAM_URL_STAT_QUIET) {
 			set_error_handler(fn() => true);
@@ -227,7 +226,7 @@ final class NativeWrapper
 	/**
 	 * Temporarily restores the native protocol handler to perform operations.
 	 */
-	private function native(string $func, ...$args)
+	private function native(string $func, mixed ...$args): mixed
 	{
 		stream_wrapper_restore(self::Protocol);
 		try {

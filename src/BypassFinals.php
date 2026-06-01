@@ -10,23 +10,23 @@ use DG\BypassFinals\NativeWrapper;
  */
 final class BypassFinals
 {
-	/** @var array  Access rules for allowing or denying paths */
-	private static $accessRules = [];
+	/** Access rules for allowing or denying paths */
+	private static array $accessRules = [];
 
-	/** @var ?string  Directory to store cached modified code */
-	private static $cacheDir;
+	/** Directory to store cached modified code */
+	private static ?string $cacheDir = null;
 
-	/** @var array  Tokens that represent 'readonly' and 'final' keywords */
-	private static $tokens = [];
+	/** Tokens that represent 'readonly' and 'final' keywords */
+	private static array $tokens = [];
 
 	/** @var array<int, array{file: string, line: int, function: string, class?: string, type?: string, args?: array}> Call stack when enable() was called */
-	private static $enableCallStack = [];
+	private static array $enableCallStack = [];
 
 	/** @var array<string>  List of userland classes loaded before enable() was called */
-	private static $classesLoadedBeforeEnable = [];
+	private static array $classesLoadedBeforeEnable = [];
 
 	/** @var array<string>  List of files that were modified */
-	private static $modifiedFiles = [];
+	private static array $modifiedFiles = [];
 
 
 	/**

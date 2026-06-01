@@ -11,14 +11,14 @@ use DG\BypassFinals;
  */
 final class MutatingWrapper
 {
-	/** @var string  Specifies the class of the underlying normal wrapper */
-	public static $underlyingWrapperClass;
+	/** Specifies the class of the underlying normal wrapper */
+	public static string $underlyingWrapperClass;
 
 	/** @var resource|null  Stream context, which may be set by stream functions */
 	public $context;
 
-	/** @var object|null  Instance of the actual underlying wrapper used for file operations */
-	private $wrapper;
+	/** Instance of the actual underlying wrapper used for file operations */
+	private ?object $wrapper = null;
 
 
 	/**
@@ -73,7 +73,7 @@ final class MutatingWrapper
 	/**
 	 * Instantiates the underlying wrapper.
 	 */
-	private function createUnderlyingWrapper()
+	private function createUnderlyingWrapper(): object
 	{
 		$wrapper = new self::$underlyingWrapperClass;
 		$wrapper->context = $this->context;
@@ -84,7 +84,7 @@ final class MutatingWrapper
 	/**
 	 * Delegates the handling of file/directory operations to the underlying wrapper.
 	 */
-	public function __call(string $method, array $args)
+	public function __call(string $method, array $args): mixed
 	{
 		$wrapper = $this->wrapper ?? $this->createUnderlyingWrapper();
 		return method_exists($wrapper, $method)
