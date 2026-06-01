@@ -8,7 +8,7 @@ require __DIR__ . '/../bootstrap.php';
 
 
 Assert::error(function () {
-	chmod('unknown', 0777);
+	chmod('unknown', 0o777);
 }, E_WARNING);
 
 Assert::error(function () {
@@ -21,11 +21,9 @@ Assert::error(function () {
 	file_get_contents('unknown');
 }, E_WARNING);
 
-if (PHP_VERSION_ID >= 70400) {
-	Assert::error(function () {
-		file_get_contents(__DIR__);
-	}, defined('PHP_WINDOWS_VERSION_BUILD') ? E_WARNING : E_NOTICE);
-}
+Assert::error(function () {
+	file_get_contents(__DIR__);
+}, defined('PHP_WINDOWS_VERSION_BUILD') ? E_WARNING : E_NOTICE);
 
 Assert::error(function () {
 	file_put_contents(__DIR__, 'content');
