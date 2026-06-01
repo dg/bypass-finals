@@ -18,7 +18,7 @@ Assert::error(function () { // not recursive
 }, E_WARNING);
 
 Assert::noError(function () { // recursive
-	mkdir(__DIR__ . '/temp/sub', 0777, true);
+	mkdir(__DIR__ . '/temp/sub', 0o777, true);
 });
 
 @rmdir(__DIR__ . '/temp/sub');

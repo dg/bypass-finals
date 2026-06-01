@@ -5,8 +5,6 @@ namespace DG;
 use DG\BypassFinals\MutatingWrapper;
 use DG\BypassFinals\NativeWrapper;
 
-const T_READONLY = PHP_VERSION_ID >= 80100 ? T_READONLY : -1;
-
 /**
  * Removes keyword 'final' & 'readonly' from source codes on-the-fly.
  */
@@ -38,9 +36,7 @@ final class BypassFinals
 	{
 		if (!self::$enableCallStack) {
 			self::$enableCallStack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-			self::$classesLoadedBeforeEnable = array_filter(get_declared_classes(), function (string $class): bool {
-				return !(new \ReflectionClass($class))->isInternal() && $class !== self::class;
-			});
+			self::$classesLoadedBeforeEnable = array_filter(get_declared_classes(), fn(string $class): bool => !(new \ReflectionClass($class))->isInternal() && $class !== self::class);
 		}
 
 		if ($bypassReadOnly) {
@@ -58,7 +54,7 @@ final class BypassFinals
 
 		// Set up the custom stream wrapper for code modification
 		MutatingWrapper::$underlyingWrapperClass = $wrapper
-			? get_class($wrapper)
+			? $wrapper::class
 			: NativeWrapper::class;
 		stream_wrapper_unregister(NativeWrapper::Protocol);
 		stream_wrapper_register(NativeWrapper::Protocol, MutatingWrapper::class);
@@ -151,7 +147,7 @@ final class BypassFinals
 
 			$code = self::removeTokens($code);
 
-			@mkdir(self::$cacheDir, 0777, true);
+			@mkdir(self::$cacheDir, 0o777, true);
 			if ($handle = @fopen($file, 'x')) { // @ may exist
 				flock($handle, LOCK_EX);
 				fwrite($handle, $code);
@@ -174,7 +170,7 @@ final class BypassFinals
 	{
 		try {
 			$tokens = token_get_all($code, TOKEN_PARSE);
-		} catch (\ParseError $e) {
+		} catch (\ParseError) {
 			return $code;
 		}
 

@@ -21,7 +21,7 @@ $proc = proc_open(
 		0 => ['pipe', 'r'],
 		1 => ['file', $tmpFile, 'w'],
 	],
-	$pipes
+	$pipes,
 );
 
 Assert::notSame(false, $proc);

@@ -11,7 +11,7 @@ DG\BypassFinals::enable();
 
 
 Assert::error(function () {
-	chmod('unknown', 0777);
+	chmod('unknown', 0o777);
 }, E_WARNING);
 
 Assert::error(function () {
