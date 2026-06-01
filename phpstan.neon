@@ -1,5 +1,46 @@
 parameters:
-	level: 5
+	level: 8
 
 	paths:
 		- src
+
+	excludePaths:
+		# PHPUnit is an optional peer dependency; its types resolve only when running under PHPUnit
+		- src/PHPUnitExtension.php
+
+	ignoreErrors:
+		-   # Intentional keep-alive container: retains proc_open handles so PHP won't close them (see #43)
+			identifier: property.onlyWritten
+			count: 1
+			path: src/NativeWrapper.php
+
+		-   # Lock operation is constrained to valid values by PHP's stream-wrapper protocol; the int<0,7> stub range cannot be proven from the plain int parameter
+			message: '#Parameter \#2 \$operation of function flock expects int<0, 7>#'
+			count: 1
+			path: src/NativeWrapper.php
+
+		-   # Read length is always positive when supplied by PHP's stream layer; the int<1,max> stub range cannot be proven from the plain int parameter
+			message: '#Parameter \#2 \$length of function fread expects int<1, max>#'
+			count: 1
+			path: src/NativeWrapper.php
+
+		-   # Truncation size is non-negative by PHP's stream-wrapper protocol; the int<0,max> stub range cannot be proven from the plain int parameter
+			message: '#Parameter \#2 \$size of function ftruncate expects int<0, max>#'
+			count: 1
+			path: src/NativeWrapper.php
+
+		-   # native() polymorphically invokes various native functions (fopen, touch, chown, ...) with differing signatures; a single callable signature cannot describe them
+			identifier: missingType.callable
+			count: 1
+			path: src/NativeWrapper.php
+
+		-   # The underlying wrapper is held as plain object, so a foreign 'file' wrapper that only duck-types
+			# the streamWrapper protocol is accepted; PHP has no native type for that protocol
+			message: '#^Call to an undefined method object::(stream_open|stream_read|stream_eof|stream_seek|stream_close|dir_opendir)\(\)\.$#'
+			count: 6
+			path: src/MutatingWrapper.php
+
+		-   # $context is part of the duck-typed streamWrapper protocol (see above); set on the plain object
+			message: '#^Access to an undefined property object::\$context\.$#'
+			count: 1
+			path: src/MutatingWrapper.php
