@@ -11,7 +11,7 @@ final class NativeWrapper
 {
 	public const Protocol = 'file';
 
-	/** Reference to the outer wrapper class for re-registration */
+	/** @var class-string  Reference to the outer wrapper class for re-registration */
 	public string $outerWrapper = MutatingWrapper::class;
 
 	/** @var resource|null  Stream context, which may be set by stream functions */
@@ -174,6 +174,7 @@ final class NativeWrapper
 	}
 
 
+	/** @return array<int|string, int> */
 	public function stream_stat(): array
 	{
 		return fstat($this->handle);
@@ -204,6 +205,7 @@ final class NativeWrapper
 	}
 
 
+	/** @return array<int|string, int>|false */
 	public function url_stat(string $path, int $flags): array|false
 	{
 		if ($flags & STREAM_URL_STAT_QUIET) {
@@ -225,6 +227,7 @@ final class NativeWrapper
 
 	/**
 	 * Temporarily restores the native protocol handler to perform operations.
+	 * @param  callable-string  $func
 	 */
 	private function native(string $func, mixed ...$args): mixed
 	{
