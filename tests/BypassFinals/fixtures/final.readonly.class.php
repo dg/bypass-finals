@@ -3,6 +3,7 @@
 final readonly class FinalReadonlyClass
 {
 	const FINAL = 123;
+	const X = self::FINAL;
 	public readonly int $foo;
 
 	final function finalMethod()

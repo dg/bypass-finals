@@ -20,6 +20,7 @@ Assert::match(<<<'XX'
 	final  class FinalReadonlyClass
 	{
 		const FINAL = 123;
+		const X = self::FINAL;
 		public  int $foo;
 
 		final function finalMethod()
