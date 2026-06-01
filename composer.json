@@ -14,7 +14,9 @@
 	},
 	"require-dev": {
 		"nette/tester": "^2.6",
-		"phpstan/phpstan": "^0.12"
+		"phpstan/phpstan": "^2.2",
+		"phpstan/extension-installer": "^1.4",
+		"nette/phpstan-rules": "^1.0"
 	},
 	"autoload": {
 		"classmap": ["src/"]
@@ -22,5 +24,10 @@
 	"scripts": {
 		"phpstan": "phpstan analyse",
 		"tester": "tester tests -s"
+	},
+	"config": {
+		"allow-plugins": {
+			"phpstan/extension-installer": true
+		}
 	}
 }
