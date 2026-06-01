@@ -1,7 +1,5 @@
 <?php declare(strict_types=1);
 
-/** @phpVersion 8.1 */
-
 use Tester\Assert;
 
 require __DIR__ . '/../bootstrap.php';

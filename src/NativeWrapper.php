@@ -113,28 +113,19 @@ final class NativeWrapper
 
 	public function stream_lock(int $operation): bool
 	{
-		return $operation
-			? flock($this->handle, $operation)
-			: true;
+		return !$operation || flock($this->handle, $operation);
 	}
 
 
 	public function stream_metadata(string $path, int $option, $value): bool
 	{
-		switch ($option) {
-			case STREAM_META_TOUCH:
-				return $this->native('touch', $path, $value[0] ?? time(), $value[1] ?? time());
-			case STREAM_META_OWNER_NAME:
-			case STREAM_META_OWNER:
-				return $this->native('chown', $path, $value);
-			case STREAM_META_GROUP_NAME:
-			case STREAM_META_GROUP:
-				return $this->native('chgrp', $path, $value);
-			case STREAM_META_ACCESS:
-				return $this->native('chmod', $path, $value);
-			default:
-				return false;
-		}
+		return match ($option) {
+			STREAM_META_TOUCH => $this->native('touch', $path, $value[0] ?? time(), $value[1] ?? time()),
+			STREAM_META_OWNER_NAME, STREAM_META_OWNER => $this->native('chown', $path, $value),
+			STREAM_META_GROUP_NAME, STREAM_META_GROUP => $this->native('chgrp', $path, $value),
+			STREAM_META_ACCESS => $this->native('chmod', $path, $value),
+			default => false,
+		};
 	}
 
 
@@ -174,18 +165,13 @@ final class NativeWrapper
 
 	public function stream_set_option(int $option, int $arg1, ?int $arg2)
 	{
-		switch ($option) {
-			case STREAM_OPTION_BLOCKING:
-				return stream_set_blocking($this->handle, (bool) $arg1);
-			case STREAM_OPTION_READ_BUFFER:
-				return stream_set_read_buffer($this->handle, $arg2);
-			case STREAM_OPTION_WRITE_BUFFER:
-				return stream_set_write_buffer($this->handle, $arg2);
-			case STREAM_OPTION_READ_TIMEOUT:
-				return stream_set_timeout($this->handle, $arg1, $arg2);
-			default:
-				return false;
-		}
+		return match ($option) {
+			STREAM_OPTION_BLOCKING => stream_set_blocking($this->handle, (bool) $arg1),
+			STREAM_OPTION_READ_BUFFER => stream_set_read_buffer($this->handle, $arg2),
+			STREAM_OPTION_WRITE_BUFFER => stream_set_write_buffer($this->handle, $arg2),
+			STREAM_OPTION_READ_TIMEOUT => stream_set_timeout($this->handle, $arg1, $arg2),
+			default => false,
+		};
 	}
 
 
@@ -222,14 +208,12 @@ final class NativeWrapper
 	public function url_stat(string $path, int $flags)
 	{
 		if ($flags & STREAM_URL_STAT_QUIET) {
-			set_error_handler(function () {
-				return true;
-			});
+			set_error_handler(fn() => true);
 		}
 		try {
 			$func = $flags & STREAM_URL_STAT_LINK ? 'lstat' : 'stat';
 			return $this->native($func, $path);
-		} catch (\RuntimeException $e) {
+		} catch (\RuntimeException) {
 			// SplFileInfo::isFile throws exception
 			return false;
 		} finally {
@@ -243,11 +227,11 @@ final class NativeWrapper
 	/**
 	 * Temporarily restores the native protocol handler to perform operations.
 	 */
-	private function native(string $func)
+	private function native(string $func, ...$args)
 	{
 		stream_wrapper_restore(self::Protocol);
 		try {
-			return $func(...array_slice(func_get_args(), 1));
+			return $func(...$args);
 		} finally {
 			stream_wrapper_unregister(self::Protocol);
 			stream_wrapper_register(self::Protocol, $this->outerWrapper);

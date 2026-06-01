@@ -23,7 +23,7 @@ function runChild(string $order): array
 		$pipes,
 		null,
 		null,
-		['bypass_shell' => true] // Windows: avoid cmd.exe stripping the outer quotes
+		['bypass_shell' => true], // Windows: avoid cmd.exe stripping the outer quotes
 	);
 	$output = stream_get_contents($pipes[1]);
 	$error = stream_get_contents($pipes[2]);

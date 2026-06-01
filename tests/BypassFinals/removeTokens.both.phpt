@@ -1,7 +1,5 @@
 <?php declare(strict_types=1);
 
-/** @phpVersion 8.2 */
-
 use Tester\Assert;
 
 require __DIR__ . '/../bootstrap.php';
@@ -9,7 +7,7 @@ require __DIR__ . '/../bootstrap.php';
 
 DG\BypassFinals::enable(bypassReadOnly: true, bypassFinal: true);
 
-	$originalCode = <<<'XX'
+$originalCode = <<<'XX'
 	<?php declare(strict_types=1);
 
 	final readonly class FinalReadonlyClass
