@@ -173,8 +173,14 @@ final class BypassFinals
 				// modifiers (e.g. "final public function"), but keep e.g. "final public const"
 				$next = self::significantToken($tokens, $i, 1, [T_PUBLIC, T_PROTECTED, T_PRIVATE, T_STATIC]);
 				$code .= is_array($next) && in_array($next[0], [T_CLASS, T_FUNCTION, T_READONLY], true) ? '' : $token[1];
+			} elseif ($token[0] === T_READONLY && isset(self::$tokens[T_READONLY])) {
+				// drop 'readonly' before a class or after a visibility modifier; a visibility-less
+				// promoted "readonly T $x" (PHP 8.4+) becomes "public" to stay a promoted property
+				$next = self::significantToken($tokens, $i, 1);
+				$prev = self::significantToken($tokens, $i, -1);
+				$code .= (is_array($next) && $next[0] === T_CLASS) || is_array($prev) ? '' : 'public';
 			} else {
-				$code .= isset(self::$tokens[$token[0]]) ? '' : $token[1];
+				$code .= $token[1];
 			}
 		}
 
