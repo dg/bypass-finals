@@ -165,13 +165,42 @@ final class BypassFinals
 		}
 
 		$code = '';
-		foreach ($tokens as $token) {
-			$code .= is_array($token)
-				? (isset(self::$tokens[$token[0]]) ? '' : $token[1])
-				: $token;
+		foreach ($tokens as $i => $token) {
+			if (!is_array($token)) {
+				$code .= $token;
+			} elseif ($token[0] === T_FINAL && isset(self::$tokens[T_FINAL])) {
+				// drop 'final' before class/function/readonly, skipping any visibility/static
+				// modifiers (e.g. "final public function"), but keep e.g. "final public const"
+				$next = self::significantToken($tokens, $i, 1, [T_PUBLIC, T_PROTECTED, T_PRIVATE, T_STATIC]);
+				$code .= is_array($next) && in_array($next[0], [T_CLASS, T_FUNCTION, T_READONLY], true) ? '' : $token[1];
+			} else {
+				$code .= isset(self::$tokens[$token[0]]) ? '' : $token[1];
+			}
 		}
 
 		return $code;
+	}
+
+
+	/**
+	 * Returns the nearest token in the given direction (+1/-1) that is not whitespace, a comment
+	 * or one of the additionally skipped token types.
+	 * @return string|array{int, string, int}|null
+	 * @param  list<string|array{int, string, int}>  $tokens
+	 * @param  list<int>  $skip
+	 */
+	private static function significantToken(array $tokens, int $index, int $direction, array $skip = [])
+	{
+		$ignore = array_merge([T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], $skip);
+		for ($j = $index + $direction; isset($tokens[$j]); $j += $direction) {
+			$t = $tokens[$j];
+			if (is_array($t) && in_array($t[0], $ignore, true)) {
+				continue;
+			}
+			return $t;
+		}
+
+		return null;
 	}
 
 

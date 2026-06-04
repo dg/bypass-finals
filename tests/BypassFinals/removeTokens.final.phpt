@@ -14,6 +14,7 @@ $originalCode = <<<'XX'
 final class FinalClass
 {
 	const FINAL = 123;
+	const X = self::FINAL;
 
 	final function finalMethod()
 	{
@@ -22,6 +23,11 @@ final class FinalClass
 	function final ()
 	{
 		return 456;
+	}
+
+	final public function myFinalFunction(): string
+	{
+		return 'x';
 	}
 }
 XX;
@@ -34,6 +40,7 @@ Assert::match(<<<'XX'
  class FinalClass
 {
 	const FINAL = 123;
+	const X = self::FINAL;
 
 	 function finalMethod()
 	{
@@ -42,6 +49,11 @@ Assert::match(<<<'XX'
 	function final ()
 	{
 		return 456;
+	}
+
+	 public function myFinalFunction(): string
+	{
+		return 'x';
 	}
 }
 
