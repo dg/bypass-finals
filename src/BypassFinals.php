@@ -190,8 +190,10 @@ final class BypassFinals
 			} elseif ($token[0] === T_READONLY && isset(self::$tokens[T_READONLY])) {
 				// drop 'readonly' before a class or when a visibility modifier is present
 				// (before or after, e.g. "readonly protected"); a visibility-less promoted
-				// "readonly T $x" (PHP 8.4+) becomes "public" to stay a promoted property
-				$next = self::significantToken($tokens, $i, 1);
+				// "readonly T $x" (PHP 8.4+) becomes "public" to stay a promoted property.
+				// 'final'/'abstract' are skipped so e.g. "readonly final class" or
+				// "readonly abstract class" is handled like "final readonly class".
+				$next = self::significantToken($tokens, $i, 1, [T_FINAL, T_ABSTRACT]);
 				$prev = self::significantToken($tokens, $i, -1);
 				$beforeVisibility = is_array($next) && in_array($next[0], [T_PUBLIC, T_PROTECTED, T_PRIVATE], true);
 				$code .= (is_array($next) && $next[0] === T_CLASS) || is_array($prev) || $beforeVisibility ? '' : 'public';
