@@ -141,7 +141,30 @@ final class NativeWrapper implements StreamWrapper
 
 	public function stream_read(int $count): string|false
 	{
-		$data = fread($this->getHandle(), $count);
+		// Under parallel PHPUnit/ParaTest, transient EINVAL (errno=22) can occur when
+		// stream_wrapper_restore churn races with an in-flight fread. Retry a few times
+		// and suppress the warning on successful recovery (failOnWarning would otherwise fail CI).
+		$data = false;
+		$retryable = false;
+		for ($attempt = 0; $attempt < 3; $attempt++) {
+			$retryable = false;
+			set_error_handler(static function (int $severity, string $message) use (&$retryable): bool {
+				if (str_contains($message, 'fread():') && str_contains($message, 'errno=22')) {
+					$retryable = true;
+					return true;
+				}
+				return false;
+			});
+			try {
+				$data = fread($this->getHandle(), $count);
+			} finally {
+				restore_error_handler();
+			}
+			if ($data !== false || !$retryable) {
+				break;
+			}
+			usleep(1000 * (1 << $attempt));
+		}
 		if ($data === '' || $data === false) {
 			$this->eofAfterEmptyRead = true;
 		}

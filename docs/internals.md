@@ -49,8 +49,14 @@ Doing file I/O there would recurse back into the wrapper, and the comment is exp
 **multiple `stream_wrapper_restore` cycles inside that callback corrupt PHP's internal
 stream-wrapper state.** So all cache reads/writes are wrapped in a single
 `stream_wrapper_restore(...)` … `finally { unregister + re-register MutatingWrapper }`
-block (with `flock` for concurrent-safe cache files keyed by
-`sha1(code + tokens)`). Preserve that single-restore structure when editing.
+block. Preserve that single-restore structure when editing.
+
+Cache entries are keyed by `sha1(code + tokens)`. Concurrent writers (e.g. ParaTest
+workers sharing a cache dir) coordinate with a **sidecar `$hash.lock` file** and
+`flock(LOCK_EX)`: losers wait, then re-check the cache. The payload is published via
+temp file + `rename` so readers never see a partial write. A lock-free fast-path read
+is safe once a complete file exists; `.lock` files are left in place (delete them only
+on a full cache wipe).
 
 `isPathAllowed` is allow-then-deny by `fnmatch` (allow defaults to `['*']`, deny is
 checked only within a matched allow). `enable()` also snapshots the call stack and the

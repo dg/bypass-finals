@@ -139,31 +139,53 @@ final class BypassFinals
 		$cacheDir = self::$cacheDir ?? throw new \LogicException('Cache directory is not set.');
 		$hash = sha1($code . implode(',', self::$tokens));
 		$file = $cacheDir . '/' . $hash;
+		$lockFile = $file . '.lock';
 
 		// All cache I/O in a single native context to avoid multiple stream_wrapper_restore
 		// cycles inside an already-active MutatingWrapper stream_open callback, which
 		// corrupts PHP's internal stream wrapper state.
 		stream_wrapper_restore(NativeWrapper::Protocol);
 		try {
-			if ($handle = @fopen($file, 'r')) { // @ may not exist
-				flock($handle, LOCK_SH);
-				$cached = stream_get_contents($handle);
-				fclose($handle);
-				if ($cached) {
+			// Fast path: atomic rename publishes complete files only, so unlocked reads are safe.
+			$cached = @file_get_contents($file);
+			if ($cached !== false && $cached !== '') {
+				return $cached;
+			}
+
+			if (!is_dir($cacheDir) && !mkdir($cacheDir, 0o777, true) && !is_dir($cacheDir)) {
+				return self::removeTokens($code);
+			}
+			$lock = @fopen($lockFile, 'c'); // @ may fail on permission errors
+			if ($lock === false) {
+				return self::removeTokens($code);
+			}
+
+			if (!flock($lock, LOCK_EX)) {
+				fclose($lock);
+				return self::removeTokens($code);
+			}
+
+			try {
+				// Another process may have populated the cache while we waited for the lock.
+				$cached = @file_get_contents($file);
+				if ($cached !== false && $cached !== '') {
 					return $cached;
 				}
+
+				$code = self::removeTokens($code);
+
+				$tmp = $file . '.' . getmypid() . '.tmp';
+				if (@file_put_contents($tmp, $code) !== false) {
+					if (!@rename($tmp, $file)) { // @ may fail if target exists (e.g. Windows)
+						@unlink($tmp);
+					}
+				}
+
+				return $code;
+			} finally {
+				flock($lock, LOCK_UN);
+				fclose($lock);
 			}
-
-			$code = self::removeTokens($code);
-
-			@mkdir($cacheDir, 0o777, true);
-			if ($handle = @fopen($file, 'x')) { // @ may exist
-				flock($handle, LOCK_EX);
-				fwrite($handle, $code);
-				fclose($handle);
-			}
-
-			return $code;
 		} finally {
 			stream_wrapper_unregister(NativeWrapper::Protocol);
 			stream_wrapper_register(NativeWrapper::Protocol, MutatingWrapper::class);
