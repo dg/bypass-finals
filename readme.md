@@ -60,11 +60,15 @@ DG\BypassFinals::allowPaths([
 Or, conversely, you can specify which paths not to search using `DG\BypassFinals::denyPaths()`.
 This gives you finer control and can solve issues with certain frameworks and libraries.
 
-Enhance performance by caching transformed files. Make sure the cache directory already exists:
+Enhance performance by caching transformed files (the directory is created automatically):
 
 ```php
 DG\BypassFinals::setCacheDirectory(__DIR__ . '/cache');
 ```
+
+Since the cached files are executed as PHP code, always use a private, trusted directory
+and never a shared world-writable location such as `/tmp` on multi-user machines,
+where another local user could inject code into the cache.
 
 For integration with PHPUnit 10 or newer, simply add BypassFinals as an extension in your PHPUnit XML configuration file:
 
