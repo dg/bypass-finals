@@ -270,6 +270,9 @@ final class BypassFinals
 		echo "Configuration:\n";
 		echo "  Bypass 'final': " . (isset(self::$tokens[T_FINAL]) ? 'enabled' : 'disabled') . "\n";
 		echo "  Bypass 'readonly': " . (isset(self::$tokens[T_READONLY]) ? 'enabled' : 'disabled') . "\n";
+		echo '  Allowed paths: ' . (isset(self::$accessRules[true]) ? implode(', ', self::$accessRules[true]) : '* (all)') . "\n";
+		echo '  Denied paths: ' . (isset(self::$accessRules[false]) ? implode(', ', self::$accessRules[false]) : 'none') . "\n";
+		echo '  Cache directory: ' . (self::$cacheDir ?? 'not set') . "\n";
 
 		echo "\nFrom where BypassFinals::enable() was started:\n";
 		foreach (self::$enableCallStack as $index => $frame) {
@@ -302,5 +305,6 @@ final class BypassFinals
 		} else {
 			echo "  no files were modified\n";
 		}
+		echo "</xmp>\n";
 	}
 }
