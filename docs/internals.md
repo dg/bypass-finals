@@ -48,8 +48,11 @@ Doing file I/O there would recurse back into the wrapper, and the comment is exp
 **multiple `stream_wrapper_restore` cycles inside that callback corrupt PHP's internal
 stream-wrapper state.** So all cache reads/writes are wrapped in a single
 `stream_wrapper_restore(...)` … `finally { unregister + re-register MutatingWrapper }`
-block (with `flock` for concurrent-safe cache files keyed by
-`sha1(code + tokens)`). Preserve that single-restore structure when editing.
+block. Cache files are keyed by `sha1(code + tokens + CacheVersion + PHP major.minor version)`
+— bump `CacheVersion` whenever the token-removal algorithm changes, else stale caches
+survive upgrades — and written atomically via temp file + `rename`, so concurrent
+writers and killed processes cannot leave a corrupt cache entry. Preserve that
+single-restore structure when editing.
 
 `isPathAllowed` is allow-then-deny by `fnmatch` (allow defaults to `['*']`, deny is
 checked only within a matched allow). `enable()` also snapshots the call stack and the

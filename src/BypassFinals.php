@@ -150,22 +150,20 @@ final class BypassFinals
 		// corrupts PHP's internal stream wrapper state.
 		stream_wrapper_restore(NativeWrapper::Protocol);
 		try {
-			if ($handle = @fopen($file, 'r')) { // @ may not exist
-				flock($handle, LOCK_SH);
-				$cached = stream_get_contents($handle);
-				fclose($handle);
-				if ($cached) {
-					return $cached;
-				}
+			$cached = @file_get_contents($file); // @ may not exist
+			if ($cached) {
+				return $cached;
 			}
 
 			$code = self::removeTokens($code);
 
-			@mkdir($cacheDir, 0o777, true);
-			if ($handle = @fopen($file, 'x')) { // @ may exist
-				flock($handle, LOCK_EX);
-				fwrite($handle, $code);
-				fclose($handle);
+			// atomic write via rename() so a killed process cannot leave a truncated cache file behind
+			@mkdir($cacheDir, 0o777, true); // @ may already exist
+			$tmp = $file . '.' . uniqid('', true) . '.tmp';
+			if (@file_put_contents($tmp, $code) !== strlen($code) // @ dir may be unwritable
+				|| !@rename($tmp, $file) // @ target may exist (a concurrent writer won with identical content)
+			) {
+				@unlink($tmp); // @ may not exist
 			}
 
 			return $code;
