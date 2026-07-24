@@ -84,9 +84,13 @@ Optionally you can configure BypassFinals in your `phpunit.xml` file:
 		<parameter name="bypassFinal" value="true"/>
 		<parameter name="bypassReadOnly" value="false"/>
 		<parameter name="cacheDirectory" value="./cache"/>
+		<parameter name="allowPaths" value="*/src/*;*/lib/*"/>
+		<parameter name="denyPaths" value="*/generated/*"/>
 	</bootstrap>
 </extensions>
 ```
+
+The `allowPaths` and `denyPaths` parameters accept multiple masks separated by semicolons.
 
  <!---->
 

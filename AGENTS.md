@@ -65,7 +65,7 @@ composer install --dev
 
 4. **PHPUnitExtension** (`src/PHPUnitExtension.php`) - PHPUnit 10+ integration that:
    - Automatically denies the PHPUnit vendor path (`*/vendor/phpunit/*`)
-   - Configures BypassFinals from phpunit.xml parameters (`bypassReadOnly`, `bypassFinal`, `cacheDirectory`)
+   - Configures BypassFinals from phpunit.xml parameters (`bypassReadOnly`, `bypassFinal`, `cacheDirectory`, `allowPaths`, `denyPaths`; path masks are semicolon-separated)
    - Enables the library during test bootstrap
 
 5. **bootstrap.php** (`src/bootstrap.php`) - Standalone bootstrap that requires the
@@ -107,6 +107,8 @@ The library supports multiple configuration approaches:
            <parameter name="bypassFinal" value="true"/>
            <parameter name="bypassReadOnly" value="false"/>
            <parameter name="cacheDirectory" value="./cache"/>
+           <parameter name="allowPaths" value="*/src/*;*/lib/*"/>
+           <parameter name="denyPaths" value="*/generated/*"/>
        </bootstrap>
    </extensions>
    ```

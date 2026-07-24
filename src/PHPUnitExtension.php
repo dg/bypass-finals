@@ -21,6 +21,14 @@ final class PHPUnitExtension implements Extension
 			'*/vendor/phpunit/*',
 		]);
 
+		if ($parameters->has('allowPaths')) {
+			BypassFinals::allowPaths($this->parsePathList($parameters->get('allowPaths')));
+		}
+
+		if ($parameters->has('denyPaths')) {
+			BypassFinals::denyPaths($this->parsePathList($parameters->get('denyPaths')));
+		}
+
 		$bypassReadOnly = !$parameters->has('bypassReadOnly') || $this->parseBoolean($parameters->get('bypassReadOnly'));
 		$bypassFinal = !$parameters->has('bypassFinal') || $this->parseBoolean($parameters->get('bypassFinal'));
 		BypassFinals::enable($bypassReadOnly, $bypassFinal);
@@ -28,6 +36,13 @@ final class PHPUnitExtension implements Extension
 		if ($parameters->has('cacheDirectory')) {
 			BypassFinals::setCacheDirectory($parameters->get('cacheDirectory'));
 		}
+	}
+
+
+	/** @return list<string> */
+	private function parsePathList(string $value): array
+	{
+		return array_values(array_filter(array_map(trim(...), explode(';', $value))));
 	}
 
 
