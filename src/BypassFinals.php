@@ -184,7 +184,7 @@ final class BypassFinals
 	{
 		try {
 			$tokens = token_get_all($code, TOKEN_PARSE);
-		} catch (\ParseError) {
+		} catch (\CompileError) { // also covers ParseError
 			return $code;
 		}
 

@@ -27,7 +27,8 @@ from the underlying. Everything non-`.php`/non-`rb` passes straight through.
 
 ## Token removal has non-obvious rules
 
-`removeTokens` tokenizes (`token_get_all(..., TOKEN_PARSE)`; a `ParseError` leaves the
+`removeTokens` tokenizes (`token_get_all(..., TOKEN_PARSE)`; a `CompileError` — which
+`TOKEN_PARSE` can raise even for parseable code, e.g. `abstract final class` — leaves the
 code untouched) and drops keywords with care:
 
 - **`final`** is dropped everywhere it acts as a modifier — classes, methods,
