@@ -20,7 +20,7 @@ final class NativeWrapper
 	/** @var resource|null  File handle, which may be set by stream functions */
 	public $handle;
 
-	/** @var list<resource> */
+	/** @var list<resource>  Intentionally kept open forever: closing a proc_open descriptor here would break the child process */
 	private static array $handles = [];
 
 	private bool $isProcOpen = false;
@@ -130,7 +130,9 @@ final class NativeWrapper
 
 	public function stream_open(string $path, string $mode, int $options = 0, ?string &$openedPath = null): bool
 	{
-		$this->isProcOpen = debug_backtrace(0, 3)[2]['function'] === 'proc_open';
+		// relies on the fixed call depth self <- MutatingWrapper::stream_open <- proc_open;
+		// an extra intermediate frame would silently disable the detection
+		$this->isProcOpen = (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3)[2]['function'] ?? null) === 'proc_open';
 		$usePath = (bool) ($options & STREAM_USE_PATH);
 		$this->handle = $this->context
 			? $this->native('fopen', $path, $mode, $usePath, $this->context)
