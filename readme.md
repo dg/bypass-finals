@@ -39,7 +39,9 @@ DG\BypassFinals::enable();
 Make sure to call this method early, preferably immediately after your `vendor/autoload.php` is loaded,
 to ensure all classes are processed before they are used.
 
-Note that final internal PHP classes like `Closure` are not mockable.
+The `final` keyword is removed from classes and methods as well as from properties
+and property hooks introduced in PHP 8.4. Note that final internal PHP classes
+like `Closure` are not mockable.
 
 To avoid removing `readonly` keywords, you can disable this feature by passing a parameter:
 

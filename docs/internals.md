@@ -30,14 +30,20 @@ from the underlying. Everything non-`.php`/non-`rb` passes straight through.
 `removeTokens` tokenizes (`token_get_all(..., TOKEN_PARSE)`; a `ParseError` leaves the
 code untouched) and drops keywords with care:
 
-- **`final`** is dropped when the next significant token (skipping visibility/`static`
-  modifiers) is `class`/`function`/`readonly` — but **`final ... const` is kept**
-  (final constants are a real feature, not a mockability barrier).
-- **`readonly`** is dropped before a `class`, or when a visibility modifier sits on
-  either side; but a **visibility-less promoted `readonly T $x` (PHP 8.4+) becomes
-  `public`** rather than vanishing, so it stays a promoted constructor property.
-  `final`/`abstract` are skipped so `readonly final class` is handled like
-  `final readonly class`.
+- **`final`** is dropped everywhere it acts as a modifier — classes, methods,
+  properties and property hooks (PHP 8.4+) — except **`final ... const`, which is
+  kept** (final constants are a real feature, not a mockability barrier). A hook
+  modifier `final get/set` is told apart from a property typed with a class
+  literally named `get`/`set` by looking one token further (`{` / `(` / `=>`
+  vs. a variable).
+- **`readonly`** is dropped before a `class` and before a property that keeps
+  another modifier.
+- **A property must keep at least one modifier.** When removal would strip them
+  all (`final int $x`, promoted `readonly T $x`, `final readonly int $x`), the
+  first removed modifier becomes `public` instead of vanishing, so the declaration
+  stays valid and a promoted parameter stays promoted. The two removed kinds are
+  mutually aware — `final readonly int $x` with both bypasses yields
+  `public int $x`, never the invalid `int $x`.
 
 These rules are the reason the removal is token-based, not a regex.
 

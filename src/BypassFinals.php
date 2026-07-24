@@ -193,20 +193,9 @@ final class BypassFinals
 			if (!is_array($token)) {
 				$code .= $token;
 			} elseif ($token[0] === T_FINAL && isset(self::$tokens[T_FINAL])) {
-				// drop 'final' before class/function/readonly, skipping any visibility/static
-				// modifiers (e.g. "final public function"), but keep e.g. "final public const"
-				$next = self::significantToken($tokens, $i, 1, [T_PUBLIC, T_PROTECTED, T_PRIVATE, T_STATIC]);
-				$code .= is_array($next) && in_array($next[0], [T_CLASS, T_FUNCTION, T_READONLY], true) ? '' : $token[1];
+				$code .= self::stripFinal($tokens, $i);
 			} elseif ($token[0] === T_READONLY && isset(self::$tokens[T_READONLY])) {
-				// drop 'readonly' before a class or when a visibility modifier is present
-				// (before or after, e.g. "readonly protected"); a visibility-less promoted
-				// "readonly T $x" (PHP 8.4+) becomes "public" to stay a promoted property.
-				// 'final'/'abstract' are skipped so e.g. "readonly final class" or
-				// "readonly abstract class" is handled like "final readonly class".
-				$next = self::significantToken($tokens, $i, 1, [T_FINAL, T_ABSTRACT]);
-				$prev = self::significantToken($tokens, $i, -1);
-				$beforeVisibility = is_array($next) && in_array($next[0], [T_PUBLIC, T_PROTECTED, T_PRIVATE], true);
-				$code .= (is_array($next) && $next[0] === T_CLASS) || is_array($prev) || $beforeVisibility ? '' : 'public';
+				$code .= self::stripReadonly($tokens, $i);
 			} else {
 				$code .= $token[1];
 			}
@@ -217,16 +206,126 @@ final class BypassFinals
 
 
 	/**
+	 * 'final' is kept for constants, dropped before classes, methods and property hooks (PHP 8.4+),
+	 * and dropped before properties (PHP 8.4+) unless it is their only modifier, in which case
+	 * it becomes 'public' because a property cannot be declared without any modifier.
+	 * @param  list<string|array{int, string, int}>  $tokens
+	 */
+	private static function stripFinal(array $tokens, int $i): string
+	{
+		$next = self::significantToken($tokens, $i, 1, self::getModifierIds());
+		return match (true) {
+			is_array($next) && $next[0] === T_CONST => 'final', // final constants are not a mockability barrier
+			is_array($next) && in_array($next[0], [T_CLASS, T_FUNCTION], true) => '',
+			self::modifiesHook($tokens, $i) => '',
+			default => self::hasOtherModifiers($tokens, $i) ? '' : 'public',
+		};
+	}
+
+
+	/**
+	 * 'readonly' is dropped before a class and before a property with another modifier; when it is
+	 * the only modifier, it becomes 'public' so the declaration stays valid and a visibility-less
+	 * promoted "readonly T $x" stays a promoted property.
+	 * @param  list<string|array{int, string, int}>  $tokens
+	 */
+	private static function stripReadonly(array $tokens, int $i): string
+	{
+		$next = self::significantToken($tokens, $i, 1, self::getModifierIds());
+		return (is_array($next) && $next[0] === T_CLASS) || self::hasOtherModifiers($tokens, $i)
+			? ''
+			: 'public';
+	}
+
+
+	/**
+	 * Determines whether the property declaration keeps at least one modifier when the one at $i
+	 * is removed: either a preceding modifier handles it (a kept one stays, a removed one emits
+	 * 'public' itself), or one of the following modifiers survives the removal.
+	 * @param  list<string|array{int, string, int}>  $tokens
+	 */
+	private static function hasOtherModifiers(array $tokens, int $i): bool
+	{
+		$prev = self::significantToken($tokens, $i, -1);
+		if (is_array($prev) && in_array($prev[0], self::getModifierIds(), true)) {
+			return true;
+		}
+
+		for ($j = $i + 1; isset($tokens[$j]); $j++) {
+			$t = $tokens[$j];
+			if (!is_array($t)) {
+				break;
+			} elseif (in_array($t[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
+				continue;
+			} elseif (!in_array($t[0], self::getModifierIds(), true)) {
+				break;
+			} elseif (!isset(self::$tokens[$t[0]])) {
+				return true; // this modifier survives the removal
+			}
+		}
+
+		return false;
+	}
+
+
+	/**
+	 * Determines whether the 'final' at $i modifies a property hook (PHP 8.4+), i.e. is followed
+	 * by get/set (possibly by-ref) rather than by a property typed with a class named get/set.
+	 * @param  list<string|array{int, string, int}>  $tokens
+	 */
+	private static function modifiesHook(array $tokens, int $i): bool
+	{
+		$hookName = false;
+		for ($j = $i + 1; isset($tokens[$j]); $j++) {
+			$t = $tokens[$j];
+			if (is_array($t) && in_array($t[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
+				continue;
+			} elseif ($hookName) {
+				return $t === '{' || $t === '(' || $t === ';' || (is_array($t) && $t[0] === T_DOUBLE_ARROW);
+			} elseif (is_array($t) && $t[0] === T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG) {
+				return true; // by-ref hook "final &get"
+			} elseif (is_array($t) && $t[0] === T_STRING && in_array(strtolower($t[1]), ['get', 'set'], true)) {
+				$hookName = true;
+			} else {
+				return false;
+			}
+		}
+
+		return false;
+	}
+
+
+	/**
+	 * Returns all tokens that can act as class member modifiers.
+	 * @return list<int>
+	 */
+	private static function getModifierIds(): array
+	{
+		static $ids;
+		if ($ids === null) {
+			$ids = [T_PUBLIC, T_PROTECTED, T_PRIVATE, T_STATIC, T_ABSTRACT, T_READONLY, T_FINAL];
+			foreach (['T_PUBLIC_SET', 'T_PROTECTED_SET', 'T_PRIVATE_SET'] as $name) { // PHP 8.4+
+				if (defined($name)) {
+					$ids[] = (int) constant($name);
+				}
+			}
+		}
+
+		return $ids;
+	}
+
+
+	/**
 	 * Returns the nearest token in the given direction (+1/-1) that is not whitespace, a comment
 	 * or one of the additionally skipped token types.
 	 * @return string|array{int, string, int}|null
 	 * @param  list<string|array{int, string, int}>  $tokens
 	 * @param  list<int>  $skip
 	 */
-	private static function significantToken(array $tokens, int $index, int $direction, array $skip = [])
+	private static function significantToken(array $tokens, int $i, int $direction, array $skip = [])
 	{
 		$ignore = array_merge([T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], $skip);
-		for ($j = $index + $direction; isset($tokens[$j]); $j += $direction) {
+		for ($j = $i + $direction; isset($tokens[$j]); $j += $direction) {
 			$t = $tokens[$j];
 			if (is_array($t) && in_array($t[0], $ignore, true)) {
 				continue;
