@@ -10,6 +10,8 @@ use DG\BypassFinals\NativeWrapper;
  */
 final class BypassFinals
 {
+	private const IsWindows = PHP_OS_FAMILY === 'Windows';
+
 	/** Bump to invalidate existing caches whenever the token-removal algorithm changes */
 	private const CacheVersion = 1;
 
@@ -243,10 +245,11 @@ final class BypassFinals
 	public static function isPathAllowed(string $path): bool
 	{
 		$path = strtr($path, '\\', '/');
+		$flags = self::IsWindows ? FNM_CASEFOLD : 0; // Windows paths are case-insensitive
 		foreach (self::$accessRules[true] ?? ['*'] as $mask) {
-			if (fnmatch($mask, $path)) {
+			if (fnmatch($mask, $path, $flags)) {
 				foreach (self::$accessRules[false] ?? [] as $mask) {
-					if (fnmatch($mask, $path)) {
+					if (fnmatch($mask, $path, $flags)) {
 						return false;
 					}
 				}
