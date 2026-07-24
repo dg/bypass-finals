@@ -10,6 +10,9 @@ use DG\BypassFinals\NativeWrapper;
  */
 final class BypassFinals
 {
+	/** Bump to invalidate existing caches whenever the token-removal algorithm changes */
+	private const CacheVersion = 1;
+
 	/** @var array<int, list<string>> Access rules for allowing or denying paths */
 	private static array $accessRules = [];
 
@@ -137,7 +140,9 @@ final class BypassFinals
 	private static function removeTokensCached(string $code): string
 	{
 		$cacheDir = self::$cacheDir ?? throw new \LogicException('Cache directory is not set.');
-		$hash = sha1($code . implode(',', self::$tokens));
+		$tokens = self::$tokens;
+		ksort($tokens);
+		$hash = sha1(serialize([$code, $tokens, self::CacheVersion, PHP_MAJOR_VERSION, PHP_MINOR_VERSION]));
 		$file = $cacheDir . '/' . $hash;
 
 		// All cache I/O in a single native context to avoid multiple stream_wrapper_restore
