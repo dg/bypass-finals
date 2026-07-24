@@ -14,11 +14,10 @@ use Tester\Assert;
 require __DIR__ . '/../bootstrap.php';
 
 
-function runChild(string $order): array
+function runChild(string $script): array
 {
-	$script = __DIR__ . '/fixtures/bootstrap-early-load.php';
 	$proc = proc_open(
-		escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($script) . ' ' . escapeshellarg($order),
+		escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/fixtures/' . $script),
 		[1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
 		$pipes,
 		null,
@@ -35,13 +34,13 @@ function runChild(string $order): array
 
 
 // bootstrap.php first: the wrapper is active before the class loads -> final stripped
-[$output, $error, $code] = runChild('before');
+[$output, $error, $code] = runChild('bootstrap-early-load.php');
 Assert::same('', $error);
 Assert::same(0, $code);
 Assert::contains('not-final', $output);
 
 // control: class loads first -> it is already final when the wrapper starts
-[$output, $error, $code] = runChild('after');
+[$output, $error, $code] = runChild('bootstrap-late-load.php');
 Assert::same('', $error);
 Assert::same(0, $code);
 Assert::contains('has-final', $output);
