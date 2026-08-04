@@ -26,3 +26,22 @@ jobs:
               with:
                   name: output-${{ matrix.php }}
                   path: tests/**/output
+
+
+    code_coverage:
+        name: Code Coverage
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+            - uses: shivammathur/setup-php@v2
+              with:
+                  php-version: 8.5
+                  coverage: pcov
+
+            - run: composer install --no-progress --prefer-dist
+            - run: composer tester -- --coverage ./coverage.xml --coverage-src ./src
+              continue-on-error: true
+            - uses: coverallsapp/github-action@v2
+              with:
+                  file: coverage.xml
+                  format: clover
