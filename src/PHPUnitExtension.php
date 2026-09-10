@@ -7,6 +7,7 @@ use PHPUnit\Runner\Extension\Extension;
 use PHPUnit\Runner\Extension\Facade;
 use PHPUnit\Runner\Extension\ParameterCollection;
 use PHPUnit\TextUI\Configuration\Configuration;
+use function in_array;
 
 
 final class PHPUnitExtension implements Extension
@@ -53,8 +54,7 @@ final class PHPUnitExtension implements Extension
 			return true;
 		} elseif (in_array($value, ['0', 'false', 'no'], true)) {
 			return false;
-		} else {
-			throw new \InvalidArgumentException("Invalid boolean-like value: $value");
 		}
+		throw new \InvalidArgumentException("Invalid boolean-like value: $value");
 	}
 }
