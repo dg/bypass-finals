@@ -1,0 +1,30 @@
+presets: nette
+types: phpstan
+
+groups:
+	- modernization
+
+paths:
+	- src
+	- tests
+
+excludePaths:
+	- fixtures*
+
+fileExtensions:
+	- php
+	- phpt
+
+overrides:
+	-
+		paths: [src]
+		nameResolution: certain
+		groups:
+			- optimizedCalls
+			- deprecations
+		rules:
+			nameFallback: {optimizedFunction: qualified, optimizedConstant: qualified}
+
+	- # the wrappers implement the streamWrapper interface, whose method names PHP prescribes
+		paths: [src/MutatingWrapper.php, src/NativeWrapper.php]
+		rules: {nameCasing: {method: keep}}
