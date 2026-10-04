@@ -14,4 +14,4 @@ Assert::exception(function () {
 	require __DIR__ . '/fixtures/invalid.php';
 }, ParseError::class);
 
-@unlink(__DIR__ . '/fixtures/invalid.php');
+@unlink(__DIR__ . '/fixtures/invalid.php'); // @ cleanup failure is not a test failure

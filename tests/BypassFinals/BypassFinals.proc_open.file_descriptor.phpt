@@ -28,6 +28,6 @@ Assert::notSame(false, $proc);
 proc_close($proc);
 
 $content = file_get_contents($tmpFile);
-@unlink($tmpFile);
+@unlink($tmpFile); // @ cleanup failure is not a test failure
 
 Assert::contains('bypass_finals_test_output', $content);

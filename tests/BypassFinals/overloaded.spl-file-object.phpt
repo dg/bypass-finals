@@ -26,6 +26,6 @@ DG\BypassFinals::enable();
 
 $after = $countLines($tmpFile);
 
-@unlink($tmpFile);
+@unlink($tmpFile); // @ cleanup failure is not a test failure
 
 Assert::same($before, $after);
