@@ -13,4 +13,4 @@ Assert::noError(function () {
 	file_put_contents(__DIR__ . '/fixtures/not_existing_class.php', 'test');
 });
 
-@unlink(__DIR__ . '/fixtures/not_existing_class.php');
+@unlink(__DIR__ . '/fixtures/not_existing_class.php'); // @ cleanup failure is not a test failure
