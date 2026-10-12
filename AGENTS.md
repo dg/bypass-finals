@@ -40,7 +40,7 @@ vendor/bin/phpstan analyse
 composer install --dev
 
 # Run tests in different PHP versions (see .github/workflows/tests.yml for supported versions)
-# Supports PHP 8.2 through 8.5
+# Supports PHP 8.2 through 8.6
 ```
 
 ## Architecture Overview
@@ -137,7 +137,7 @@ Use `DG\BypassFinals::debugInfo()` to troubleshoot issues. This outputs:
 
 ### Compatibility
 
-- **PHP Versions**: 8.2 through 8.5 (minimum is now `>=8.2`, per `composer.json`)
+- **PHP Versions**: 8.2 through 8.6 (minimum is now `>=8.2`, per `composer.json`)
 - **readonly Support**: enabled by default (the 8.2 minimum guarantees the `T_READONLY` token exists)
 - **Testing Frameworks**: PHPUnit, Mockery, Nette Tester
 - **Internal Classes**: Cannot modify PHP internal classes like `Closure`
