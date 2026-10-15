@@ -2,8 +2,10 @@
 
 namespace DG;
 
-use DG\BypassFinals\MutatingWrapper;
-use DG\BypassFinals\NativeWrapper;
+use DG\BypassFinals\{MutatingWrapper, NativeWrapper};
+use function in_array, is_array, strlen;
+use const PHP_OS_FAMILY;
+
 
 /**
  * Removes keyword 'final' & 'readonly' from source codes on-the-fly.
@@ -41,7 +43,10 @@ final class BypassFinals
 	{
 		if (!self::$enableCallStack) {
 			self::$enableCallStack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-			self::$classesLoadedBeforeEnable = array_filter(get_declared_classes(), fn(string $class): bool => !(new \ReflectionClass($class))->isInternal() && $class !== self::class);
+			self::$classesLoadedBeforeEnable = array_filter(
+				get_declared_classes(),
+				fn(string $class): bool => !(new \ReflectionClass($class))->isInternal() && $class !== self::class,
+			);
 		}
 
 		if ($bypassReadOnly) {
@@ -169,6 +174,7 @@ final class BypassFinals
 			}
 
 			return $code;
+
 		} finally {
 			stream_wrapper_unregister(NativeWrapper::Protocol);
 			stream_wrapper_register(NativeWrapper::Protocol, MutatingWrapper::class);
@@ -324,7 +330,7 @@ final class BypassFinals
 	 */
 	private static function significantToken(array $tokens, int $i, int $direction, array $skip = [])
 	{
-		$ignore = array_merge([T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], $skip);
+		$ignore = [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT, ...$skip];
 		for ($j = $i + $direction; isset($tokens[$j]); $j += $direction) {
 			$t = $tokens[$j];
 			if (is_array($t) && in_array($t[0], $ignore, true)) {
