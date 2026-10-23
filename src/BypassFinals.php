@@ -63,6 +63,9 @@ final class BypassFinals
 			return;
 		}
 
+		// opcache serves a script it has cached without opening the file, past the wrapper
+		ini_set('opcache.enable', '0');
+
 		// Set up the custom stream wrapper for code modification
 		MutatingWrapper::$underlyingWrapperClass = $wrapper
 			? $wrapper::class

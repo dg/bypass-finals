@@ -25,6 +25,13 @@ code changed** — closes the underlying handle and serves the modified source f
 fresh `NativeWrapper` over a `tmpfile()`; unchanged source just `seek(0)`s and streams
 from the underlying. Everything non-`.php`/non-`rb` passes straight through.
 
+`enable()` **switches opcache off** for the process. Opcache serves a script it has
+already cached without opening the file, so the wrapper never sees it: the class keeps
+its `final`, and the other way round, the modified script would land in the cache and
+reach code that never enabled BypassFinals. The cache is shared by every process of a
+php-fpm pool, by php-cgi processes running at once on Windows (parallel Tester runs),
+and across runs by `opcache.file_cache`.
+
 ## Token removal has non-obvious rules
 
 `removeTokens` tokenizes (`token_get_all(..., TOKEN_PARSE)`; a `CompileError` — which

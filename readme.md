@@ -39,6 +39,10 @@ DG\BypassFinals::enable();
 Make sure to call this method early, preferably immediately after your `vendor/autoload.php` is loaded,
 to ensure all classes are processed before they are used.
 
+The method also switches off OPcache for the current process. A script that OPcache has already cached
+would otherwise be served without the file being read, so its keywords would stay in place, and the modified
+code would get into the cache shared with other processes.
+
 The `final` keyword is removed from classes and methods as well as from properties
 and property hooks introduced in PHP 8.4. Note that final internal PHP classes
 like `Closure` are not mockable.
