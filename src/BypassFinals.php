@@ -3,7 +3,7 @@
 namespace DG;
 
 use DG\BypassFinals\{MutatingWrapper, NativeWrapper};
-use function in_array, is_array, strlen;
+use function in_array, is_array, is_object, is_string, strlen;
 use const PHP_OS_FAMILY;
 
 
@@ -32,8 +32,11 @@ final class BypassFinals
 	/** @var array<string>  List of userland classes loaded before enable() was called */
 	private static array $classesLoadedBeforeEnable = [];
 
-	/** @var array<string>  List of files that were modified */
+	/** @var array<string, string>  Files that were modified => hash of their original code */
 	private static array $modifiedFiles = [];
+
+	/** @var array<string, array<string, true>>  Lowercased names of classes declared final, by file */
+	private static array $finalClasses = [];
 
 
 	/**
@@ -132,7 +135,7 @@ final class BypassFinals
 					: self::removeTokens($code);
 				if ($modifiedCode !== $code) {
 					if ($file !== null) {
-						self::$modifiedFiles[] = $file;
+						self::$modifiedFiles[$file] = hash('xxh128', $code);
 					}
 					return $modifiedCode;
 				}
@@ -371,6 +374,102 @@ final class BypassFinals
 
 
 	/**
+	 * Determines whether the class was declared 'final' in its source file, even if BypassFinals
+	 * has removed the keyword. Useful for architecture tests, where ReflectionClass::isFinal()
+	 * reports the modified code. Throws if the source file has changed since the class was loaded.
+	 * @param  class-string|\ReflectionClass<object>  $class
+	 */
+	public static function wasFinal(string|\ReflectionClass $class): bool
+	{
+		$rc = is_string($class) ? new \ReflectionClass($class) : $class;
+		$file = $rc->getFileName();
+		if ($rc->isFinal() || $rc->isInterface() || $rc->isTrait() || $rc->isAnonymous()
+			|| $file === false || !isset(self::$modifiedFiles[$file])
+		) {
+			return $rc->isFinal();
+		}
+
+		if (!isset(self::$finalClasses[$file])) {
+			$code = self::readOriginal($file);
+			if (hash('xxh128', $code) !== self::$modifiedFiles[$file]) {
+				throw new \RuntimeException("File '$file' has changed since class {$rc->name} was loaded.");
+			}
+			self::$finalClasses[$file] = self::findFinalClasses($code);
+		}
+
+		return isset(self::$finalClasses[$file][strtolower($rc->name)]);
+	}
+
+
+	/**
+	 * Reads the file past the wrapper (which would remove 'final' again) and restores
+	 * whichever wrapper is registered for the protocol afterwards.
+	 */
+	private static function readOriginal(string $file): string
+	{
+		$handle = fopen(__FILE__, 'r') ?: throw new \RuntimeException('Unable to open ' . __FILE__);
+		$wrapper = stream_get_meta_data($handle)['wrapper_data'] ?? null;
+		fclose($handle);
+
+		if (is_object($wrapper)) {
+			stream_wrapper_restore(NativeWrapper::Protocol);
+		}
+		try {
+			$code = @file_get_contents($file); // @ file may have been deleted
+		} finally {
+			if (is_object($wrapper)) {
+				stream_wrapper_unregister(NativeWrapper::Protocol);
+				stream_wrapper_register(NativeWrapper::Protocol, $wrapper::class);
+			}
+		}
+
+		return $code === false
+			? throw new \RuntimeException("Unable to read file '$file'.")
+			: $code;
+	}
+
+
+	/**
+	 * Returns the lowercased fully qualified names of classes declared 'final' in the code.
+	 * @return array<string, true>
+	 */
+	private static function findFinalClasses(string $code): array
+	{
+		try {
+			$tokens = token_get_all($code, TOKEN_PARSE);
+		} catch (\CompileError) { // also covers ParseError
+			return [];
+		}
+
+		$namespace = '';
+		$res = [];
+		foreach ($tokens as $i => $token) {
+			if (!is_array($token)) {
+				continue;
+			} elseif ($token[0] === T_NAMESPACE) {
+				$name = self::significantToken($tokens, $i, 1);
+				$namespace = is_array($name) && in_array($name[0], [T_STRING, T_NAME_QUALIFIED], true)
+					? $name[1] . '\\'
+					: '';
+			} elseif ($token[0] === T_FINAL) {
+				$j = $i + 1;
+				while (isset($tokens[$j]) && is_array($tokens[$j])
+					&& in_array($tokens[$j][0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT, T_ABSTRACT, T_READONLY], true)
+				) {
+					$j++;
+				}
+				$name = self::significantToken($tokens, $j, 1);
+				if (is_array($tokens[$j] ?? null) && $tokens[$j][0] === T_CLASS && is_array($name) && $name[0] === T_STRING) {
+					$res[strtolower($namespace . $name[1])] = true;
+				}
+			}
+		}
+
+		return $res;
+	}
+
+
+	/**
 	 * Returns debugging information to help diagnose issues.
 	 */
 	public static function debugInfo(): void
@@ -410,7 +509,7 @@ final class BypassFinals
 
 		echo "\nFiles where BypassFinals removed final/readonly:\n";
 		if (self::$modifiedFiles) {
-			foreach (self::$modifiedFiles as $file) {
+			foreach (array_keys(self::$modifiedFiles) as $file) {
 				echo "  - $file\n";
 			}
 		} else {
