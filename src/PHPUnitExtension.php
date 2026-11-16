@@ -16,10 +16,6 @@ final class PHPUnitExtension implements Extension
 		ParameterCollection $parameters,
 	): void
 	{
-		BypassFinals::denyPaths([
-			'*/vendor/phpunit/*',
-		]);
-
 		if ($parameters->has('allowPaths')) {
 			BypassFinals::allowPaths($this->parsePathList($parameters->get('allowPaths')));
 		}
@@ -27,6 +23,11 @@ final class PHPUnitExtension implements Extension
 		if ($parameters->has('denyPaths')) {
 			BypassFinals::denyPaths($this->parsePathList($parameters->get('denyPaths')));
 		}
+
+		// registered last, so that no '!' exception from phpunit.xml can override it
+		BypassFinals::denyPaths([
+			'*/vendor/phpunit/*',
+		]);
 
 		$bypassReadOnly = !$parameters->has('bypassReadOnly') || $this->parseBoolean($parameters->get('bypassReadOnly'));
 		$bypassFinal = !$parameters->has('bypassFinal') || $this->parseBoolean($parameters->get('bypassFinal'));

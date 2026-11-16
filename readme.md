@@ -64,6 +64,16 @@ DG\BypassFinals::allowPaths([
 Or, conversely, you can specify which paths not to search using `DG\BypassFinals::denyPaths()`.
 This gives you finer control and can solve issues with certain frameworks and libraries.
 
+A mask prefixed with `!` is an exception to the denied paths. As in `.gitignore`, the last matching mask wins.
+For example, to keep `final` everywhere in `src/` except in `src/Mapper/`:
+
+```php
+DG\BypassFinals::denyPaths([
+	'*/src/*',
+	'!*/src/Mapper/*',
+]);
+```
+
 Enhance performance by caching transformed files (the directory is created automatically):
 
 ```php

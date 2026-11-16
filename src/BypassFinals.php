@@ -100,6 +100,8 @@ final class BypassFinals
 
 	/**
 	 * Sets the list of file path masks that are denied for code modification.
+	 * A mask prefixed with '!' is an exception for paths denied by the preceding masks. As in .gitignore,
+	 * the last matching mask wins.
 	 * @param  string[]  $masks
 	 */
 	public static function denyPaths(array $masks): void
@@ -354,19 +356,27 @@ final class BypassFinals
 	{
 		$path = strtr($path, '\\', '/');
 		$flags = self::IsWindows ? FNM_CASEFOLD : 0; // Windows paths are case-insensitive
+		$allowed = false;
 		foreach (self::$accessRules[true] ?? ['*'] as $mask) {
 			if (fnmatch($mask, $path, $flags)) {
-				foreach (self::$accessRules[false] ?? [] as $mask) {
-					if (fnmatch($mask, $path, $flags)) {
-						return false;
-					}
-				}
-
-				return true;
+				$allowed = true;
+				break;
 			}
 		}
 
-		return false;
+		if (!$allowed) {
+			return false;
+		}
+
+		// like .gitignore: the last matching mask wins, a '!' mask is an exception
+		foreach (array_reverse(self::$accessRules[false] ?? []) as $mask) {
+			$exception = str_starts_with($mask, '!');
+			if (fnmatch($exception ? substr($mask, 1) : $mask, $path, $flags)) {
+				return $exception;
+			}
+		}
+
+		return true;
 	}
 
 
@@ -382,7 +392,9 @@ final class BypassFinals
 		echo "  Bypass 'final': " . (isset(self::$tokens[T_FINAL]) ? 'enabled' : 'disabled') . "\n";
 		echo "  Bypass 'readonly': " . (isset(self::$tokens[T_READONLY]) ? 'enabled' : 'disabled') . "\n";
 		echo '  Allowed paths: ' . (isset(self::$accessRules[true]) ? implode(', ', self::$accessRules[true]) : '* (all)') . "\n";
-		echo '  Denied paths: ' . (isset(self::$accessRules[false]) ? implode(', ', self::$accessRules[false]) : 'none') . "\n";
+		echo '  Denied paths (! = exception): '
+			. (isset(self::$accessRules[false]) ? implode(', ', self::$accessRules[false]) : 'none')
+			. "\n";
 		echo '  Cache directory: ' . (self::$cacheDir ?? 'not set') . "\n";
 
 		echo "\nFrom where BypassFinals::enable() was started:\n";

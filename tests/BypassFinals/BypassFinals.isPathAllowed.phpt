@@ -35,4 +35,36 @@ Assert::with(BypassFinals::class, function () {
 
 	Assert::false(BypassFinals::isPathAllowed(__DIR__ . '/fixtures/class.php'));
 	Assert::false(BypassFinals::isPathAllowed(__DIR__ . '/other/class.php'));
+
+
+	// '!' masks in denyPaths() are exceptions to the deny rules
+	DG\BypassFinals::setWhitelist(['*']); // reset whitelist
+	DG\BypassFinals::denyPaths([
+		'*/src/*',
+		'!*/src/Mapper/*',
+	]);
+
+	Assert::true(BypassFinals::isPathAllowed('/app/src/Mapper/Foo.php'));
+	Assert::true(BypassFinals::isPathAllowed('C:\\app\\src\\Mapper\\Foo.php'));
+	Assert::false(BypassFinals::isPathAllowed('/app/src/Model/Foo.php'));
+	Assert::false(BypassFinals::isPathAllowed('/app/src/Mapper.php'));
+	Assert::true(BypassFinals::isPathAllowed('/app/lib/Foo.php'));
+
+
+	// the last matching mask wins, so a path can be denied again below an exception
+	DG\BypassFinals::denyPaths([
+		'*/src/Mapper/Generated/*',
+	]);
+
+	Assert::false(BypassFinals::isPathAllowed('/app/src/Mapper/Generated/Foo.php'));
+	Assert::true(BypassFinals::isPathAllowed('/app/src/Mapper/Foo.php'));
+
+
+	// an exception does not allow a path outside of allowPaths()
+	DG\BypassFinals::setWhitelist([
+		'*/lib/*',
+	]);
+
+	Assert::true(BypassFinals::isPathAllowed('/app/lib/Foo.php'));
+	Assert::false(BypassFinals::isPathAllowed('/app/src/Mapper/Foo.php'));
 });
