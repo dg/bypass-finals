@@ -88,6 +88,8 @@ final class BypassFinals
 
 	/**
 	 * Sets the list of file path masks that are allowed for code modification.
+	 * A mask prefixed with '!' is an exception for paths allowed by the preceding masks. As in .gitignore,
+	 * the last matching mask wins.
 	 * @param  string[]  $masks
 	 */
 	public static function allowPaths(array $masks): void
@@ -356,27 +358,26 @@ final class BypassFinals
 	{
 		$path = strtr($path, '\\', '/');
 		$flags = self::IsWindows ? FNM_CASEFOLD : 0; // Windows paths are case-insensitive
-		$allowed = false;
-		foreach (self::$accessRules[true] ?? ['*'] as $mask) {
-			if (fnmatch($mask, $path, $flags)) {
-				$allowed = true;
-				break;
-			}
-		}
+		return (!isset(self::$accessRules[true]) || self::matchMasks(self::$accessRules[true], $path, $flags) === true)
+			&& self::matchMasks(self::$accessRules[false] ?? [], $path, $flags) !== true;
+	}
 
-		if (!$allowed) {
-			return false;
-		}
 
-		// like .gitignore: the last matching mask wins, a '!' mask is an exception
-		foreach (array_reverse(self::$accessRules[false] ?? []) as $mask) {
+	/**
+	 * Like .gitignore, the last matching mask wins: returns true for a mask, false for a '!' exception,
+	 * null if nothing matches.
+	 * @param  list<string>  $masks
+	 */
+	private static function matchMasks(array $masks, string $path, int $flags): ?bool
+	{
+		foreach (array_reverse($masks) as $mask) {
 			$exception = str_starts_with($mask, '!');
 			if (fnmatch($exception ? substr($mask, 1) : $mask, $path, $flags)) {
-				return $exception;
+				return !$exception;
 			}
 		}
 
-		return true;
+		return null;
 	}
 
 

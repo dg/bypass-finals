@@ -67,4 +67,17 @@ Assert::with(BypassFinals::class, function () {
 
 	Assert::true(BypassFinals::isPathAllowed('/app/lib/Foo.php'));
 	Assert::false(BypassFinals::isPathAllowed('/app/src/Mapper/Foo.php'));
+
+
+	// '!' masks in allowPaths(), the last matching mask wins
+	DG\BypassFinals::setWhitelist([
+		'*/lib/*',
+		'!*/lib/Generated/*',
+		'*/lib/Generated/Mockable/*',
+	]);
+
+	Assert::true(BypassFinals::isPathAllowed('/app/lib/Foo.php'));
+	Assert::false(BypassFinals::isPathAllowed('/app/lib/Generated/Foo.php'));
+	Assert::true(BypassFinals::isPathAllowed('/app/lib/Generated/Mockable/Foo.php'));
+	Assert::false(BypassFinals::isPathAllowed('/app/other/Foo.php'));
 });

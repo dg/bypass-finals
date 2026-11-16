@@ -69,8 +69,8 @@ writers and killed processes cannot leave a corrupt cache entry. Preserve that
 single-restore structure when editing.
 
 `isPathAllowed` is allow-then-deny by `fnmatch` (allow defaults to `['*']`, deny is
-checked only within a matched allow). The deny list is evaluated like `.gitignore`: the
-last matching mask wins, and a `!`-prefixed mask is an exception (path allowed). A
+checked only within a matched allow). Each list is evaluated like `.gitignore`
+(`matchMasks`): the last matching mask wins, and a `!`-prefixed mask is an exception. A
 leading `!` could never match before (paths are absolute), so this is backward
 compatible. `PHPUnitExtension` adds its `*/vendor/phpunit/*` deny *after* the user's
 `denyPaths`, so no exception from phpunit.xml can re-enable modifying PHPUnit itself. `enable()` also snapshots the call stack and the
