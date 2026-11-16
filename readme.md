@@ -106,7 +106,8 @@ Optionally you can configure BypassFinals in your `phpunit.xml` file:
 </extensions>
 ```
 
-The `allowPaths` and `denyPaths` parameters accept multiple masks separated by semicolons.
+The `allowPaths` and `denyPaths` parameters accept multiple masks separated by semicolons, including `!` exceptions.
+The extension always denies `*/vendor/phpunit/*`, and exceptions in `phpunit.xml` cannot override it.
 
  <!---->
 

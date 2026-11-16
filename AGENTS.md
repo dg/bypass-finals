@@ -64,7 +64,7 @@ composer install --dev
    - Handles file, directory, and metadata operations
 
 4. **PHPUnitExtension** (`src/PHPUnitExtension.php`) - PHPUnit 10+ integration that:
-   - Automatically denies the PHPUnit vendor path (`*/vendor/phpunit/*`)
+   - Automatically denies the PHPUnit vendor path (`*/vendor/phpunit/*`), registered after the phpunit.xml `denyPaths` so their `!` exceptions cannot override it
    - Configures BypassFinals from phpunit.xml parameters (`bypassReadOnly`, `bypassFinal`, `cacheDirectory`, `allowPaths`, `denyPaths`; path masks are semicolon-separated)
    - Enables the library during test bootstrap
 

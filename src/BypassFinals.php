@@ -358,7 +358,12 @@ final class BypassFinals
 	{
 		$path = strtr($path, '\\', '/');
 		$flags = self::IsWindows ? FNM_CASEFOLD : 0; // Windows paths are case-insensitive
-		return (!isset(self::$accessRules[true]) || self::matchMasks(self::$accessRules[true], $path, $flags) === true)
+		$allow = self::$accessRules[true] ?? ['*'];
+		if ($allow && !array_filter($allow, fn(string $mask): bool => !str_starts_with($mask, '!'))) {
+			array_unshift($allow, '*'); // a list of exceptions only, applies to all paths
+		}
+
+		return self::matchMasks($allow, $path, $flags) === true
 			&& self::matchMasks(self::$accessRules[false] ?? [], $path, $flags) !== true;
 	}
 
@@ -393,9 +398,8 @@ final class BypassFinals
 		echo "  Bypass 'final': " . (isset(self::$tokens[T_FINAL]) ? 'enabled' : 'disabled') . "\n";
 		echo "  Bypass 'readonly': " . (isset(self::$tokens[T_READONLY]) ? 'enabled' : 'disabled') . "\n";
 		echo '  Allowed paths: ' . (isset(self::$accessRules[true]) ? implode(', ', self::$accessRules[true]) : '* (all)') . "\n";
-		echo '  Denied paths (! = exception): '
-			. (isset(self::$accessRules[false]) ? implode(', ', self::$accessRules[false]) : 'none')
-			. "\n";
+		echo '  Denied paths: ' . (isset(self::$accessRules[false]) ? implode(', ', self::$accessRules[false]) : 'none') . "\n";
+		echo "  (in both lists the last matching mask wins, '!' marks an exception)\n";
 		echo '  Cache directory: ' . (self::$cacheDir ?? 'not set') . "\n";
 
 		echo "\nFrom where BypassFinals::enable() was started:\n";
