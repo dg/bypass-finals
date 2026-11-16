@@ -64,6 +64,16 @@ DG\BypassFinals::allowPaths([
 Or, conversely, you can specify which paths not to search using `DG\BypassFinals::denyPaths()`.
 This gives you finer control and can solve issues with certain frameworks and libraries.
 
+In both lists, a mask prefixed with `!` is an exception. As in `.gitignore`, the last matching mask wins.
+For example, to keep `final` everywhere in `src/` except in `src/Mapper/`:
+
+```php
+DG\BypassFinals::denyPaths([
+	'*/src/*',
+	'!*/src/Mapper/*',
+]);
+```
+
 Enhance performance by caching transformed files (the directory is created automatically):
 
 ```php
@@ -96,7 +106,8 @@ Optionally you can configure BypassFinals in your `phpunit.xml` file:
 </extensions>
 ```
 
-The `allowPaths` and `denyPaths` parameters accept multiple masks separated by semicolons.
+The `allowPaths` and `denyPaths` parameters accept multiple masks separated by semicolons, including `!` exceptions.
+The extension always denies `*/vendor/phpunit/*`, and exceptions in `phpunit.xml` cannot override it.
 
  <!---->
 

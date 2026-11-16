@@ -88,6 +88,8 @@ final class BypassFinals
 
 	/**
 	 * Sets the list of file path masks that are allowed for code modification.
+	 * A mask prefixed with '!' is an exception for paths allowed by the preceding masks. As in .gitignore,
+	 * the last matching mask wins.
 	 * @param  string[]  $masks
 	 */
 	public static function allowPaths(array $masks): void
@@ -100,6 +102,8 @@ final class BypassFinals
 
 	/**
 	 * Sets the list of file path masks that are denied for code modification.
+	 * A mask prefixed with '!' is an exception for paths denied by the preceding masks. As in .gitignore,
+	 * the last matching mask wins.
 	 * @param  string[]  $masks
 	 */
 	public static function denyPaths(array $masks): void
@@ -354,19 +358,31 @@ final class BypassFinals
 	{
 		$path = strtr($path, '\\', '/');
 		$flags = self::IsWindows ? FNM_CASEFOLD : 0; // Windows paths are case-insensitive
-		foreach (self::$accessRules[true] ?? ['*'] as $mask) {
-			if (fnmatch($mask, $path, $flags)) {
-				foreach (self::$accessRules[false] ?? [] as $mask) {
-					if (fnmatch($mask, $path, $flags)) {
-						return false;
-					}
-				}
+		$allow = self::$accessRules[true] ?? ['*'];
+		if ($allow && !array_filter($allow, fn(string $mask): bool => !str_starts_with($mask, '!'))) {
+			array_unshift($allow, '*'); // a list of exceptions only, applies to all paths
+		}
 
-				return true;
+		return self::matchMasks($allow, $path, $flags) === true
+			&& self::matchMasks(self::$accessRules[false] ?? [], $path, $flags) !== true;
+	}
+
+
+	/**
+	 * Like .gitignore, the last matching mask wins: returns true for a mask, false for a '!' exception,
+	 * null if nothing matches.
+	 * @param  list<string>  $masks
+	 */
+	private static function matchMasks(array $masks, string $path, int $flags): ?bool
+	{
+		foreach (array_reverse($masks) as $mask) {
+			$exception = str_starts_with($mask, '!');
+			if (fnmatch($exception ? substr($mask, 1) : $mask, $path, $flags)) {
+				return !$exception;
 			}
 		}
 
-		return false;
+		return null;
 	}
 
 
@@ -383,6 +399,7 @@ final class BypassFinals
 		echo "  Bypass 'readonly': " . (isset(self::$tokens[T_READONLY]) ? 'enabled' : 'disabled') . "\n";
 		echo '  Allowed paths: ' . (isset(self::$accessRules[true]) ? implode(', ', self::$accessRules[true]) : '* (all)') . "\n";
 		echo '  Denied paths: ' . (isset(self::$accessRules[false]) ? implode(', ', self::$accessRules[false]) : 'none') . "\n";
+		echo "  (in both lists the last matching mask wins, '!' marks an exception)\n";
 		echo '  Cache directory: ' . (self::$cacheDir ?? 'not set') . "\n";
 
 		echo "\nFrom where BypassFinals::enable() was started:\n";
