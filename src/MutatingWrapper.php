@@ -3,6 +3,7 @@
 namespace DG\BypassFinals;
 
 use DG\BypassFinals;
+use function in_array;
 
 
 /**
@@ -34,30 +35,35 @@ final class MutatingWrapper
 		clearstatcache(true, $path);
 
 		$this->wrapper = $this->createUnderlyingWrapper();
-		if (!$this->wrapper->stream_open($path, $mode, $options, $openedPath)) {
-			return false;
-		}
-
-		if ($mode === 'rb' && pathinfo($path, PATHINFO_EXTENSION) === 'php' && BypassFinals::isPathAllowed($path)) {
-			$content = '';
-			while (!$this->wrapper->stream_eof()) {
-				$content .= $this->wrapper->stream_read(8192);
+		try {
+			if (!$this->wrapper->stream_open($path, $mode, $options, $openedPath)) {
+				return false;
 			}
 
-			$modified = BypassFinals::modifyCode($content, $path);
-			if ($modified === $content) {
-				$this->wrapper->stream_seek(0);
-			} else {
-				$this->wrapper->stream_close();
-				$wrapper = new NativeWrapper;
-				$wrapper->handle = tmpfile() ?: throw new \RuntimeException('Unable to create a temporary file.');
-				$wrapper->stream_write($modified);
-				$wrapper->stream_seek(0);
-				$this->wrapper = $wrapper;
-			}
-		}
+			if ($mode === 'rb' && pathinfo($path, PATHINFO_EXTENSION) === 'php' && BypassFinals::isPathAllowed($path)) {
+				$content = '';
+				while (!$this->wrapper->stream_eof()) {
+					$content .= $this->wrapper->stream_read(8192);
+				}
 
-		return true;
+				$modified = BypassFinals::modifyCode($content, $path);
+				if ($modified === $content) {
+					$this->wrapper->stream_seek(0, SEEK_SET);
+				} else {
+					$this->wrapper->stream_close();
+					$wrapper = new NativeWrapper;
+					$wrapper->handle = tmpfile() ?: throw new \RuntimeException('Unable to create a temporary file.');
+					$wrapper->stream_write($modified);
+					$wrapper->stream_seek(0, SEEK_SET);
+					$this->wrapper = $wrapper;
+				}
+			}
+
+			return true;
+
+		} finally {
+			$this->keepOnTop();
+		}
 	}
 
 
@@ -67,7 +73,11 @@ final class MutatingWrapper
 	public function dir_opendir(string $path, int $options): bool
 	{
 		$this->wrapper = $this->createUnderlyingWrapper();
-		return $this->wrapper->dir_opendir($path, $options);
+		try {
+			return $this->wrapper->dir_opendir($path, $options);
+		} finally {
+			$this->keepOnTop();
+		}
 	}
 
 
@@ -89,8 +99,31 @@ final class MutatingWrapper
 	public function __call(string $method, array $args): mixed
 	{
 		$wrapper = $this->wrapper ?? $this->createUnderlyingWrapper();
-		return method_exists($wrapper, $method)
-			? $wrapper->$method(...$args)
-			: false;
+		try {
+			return method_exists($wrapper, $method)
+				? $wrapper->$method(...$args)
+				: false;
+		} finally {
+			if (in_array($method, ['url_stat', 'unlink', 'rename', 'mkdir', 'rmdir', 'stream_metadata'], true)) {
+				$this->keepOnTop();
+			}
+		}
+	}
+
+
+	/**
+	 * A foreign underlying wrapper may re-register itself for the protocol after a path operation
+	 * (e.g. Infection's IncludeInterceptor), which would switch BypassFinals off. PHP dispatched that
+	 * operation to this wrapper, so it was on top, and this puts it back. Operations on an open handle
+	 * do not, so a later deliberate stream_wrapper_restore() is not undone by reading an old handle.
+	 */
+	private function keepOnTop(): void
+	{
+		if (self::$underlyingWrapperClass !== NativeWrapper::class) {
+			if (in_array(NativeWrapper::Protocol, stream_get_wrappers(), true)) {
+				stream_wrapper_unregister(NativeWrapper::Protocol);
+			}
+			stream_wrapper_register(NativeWrapper::Protocol, self::class);
+		}
 	}
 }

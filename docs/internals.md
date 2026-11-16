@@ -18,6 +18,20 @@ it — `MutatingWrapper` delegates every real file op to that underlying wrapper
   only duck-types the streamWrapper protocol** is accepted at runtime.
 - `enable()` is **idempotent** — if the current wrapper is already a `MutatingWrapper`
   it returns early, so re-enabling won't stack wrappers on themselves.
+- A foreign underlying wrapper may **re-register itself** after a path operation
+  (Infection's `IncludeInterceptor` does `restore` → op → `register(self)` in `finally`
+  for `stream_open`, `url_stat`, `dir_opendir`, `unlink`, `rename`, `mkdir`, `rmdir`,
+  `stream_metadata`), which would knock `MutatingWrapper` off the top: BypassFinals silently
+  stops, mocks of final classes fail, and Infection counts those errors as kills. PHP
+  dispatched such an operation to `MutatingWrapper`, so it was on top, and `keepOnTop()`
+  puts it back afterwards. Operations on an open handle (read, stat, close) do not, so a
+  deliberate `stream_wrapper_restore()` is not undone by touching an old handle, and
+  nothing is registered during shutdown. It is a no-op over `NativeWrapper`.
+- `NativeWrapper::stream_open` detects `proc_open` by a fixed call depth, so the underlying
+  `stream_open` must stay a **direct** call from `MutatingWrapper::stream_open` (the `try`
+  block adds no frame; a helper method around it would).
+- Calls to the underlying wrapper pass every protocol argument (e.g. `stream_seek(0, SEEK_SET)`),
+  since a foreign wrapper may declare them without defaults.
 
 `stream_open` modifies only for a **`rb` open of a `.php` file whose path passes
 `isPathAllowed`**: it reads the whole source, runs `modifyCode`, and — **only if the
