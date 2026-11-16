@@ -76,8 +76,10 @@ from disk once per file, past the wrapper, and collects the fully qualified name
 `final` classes (namespace-aware, so two classes `X` in one file are told apart).
 The read restores the wrapper registered *at that moment* (probed like `enable()` does),
 never hardcoding `MutatingWrapper`: another tool may have stacked its own wrapper on top,
-or a test may have restored the native one to switch BypassFinals off. The source is
-read when called, so a file edited after loading gives the on-disk answer.
+or a test may have restored the native one to switch BypassFinals off. `modifyCode` stores an
+`xxh128` hash of each original source (far cheaper than tokenizing it at load time), so
+a file edited after loading makes `wasFinal()` throw instead of answering from the
+new source.
 
 `isPathAllowed` is allow-then-deny by `fnmatch` (allow defaults to `['*']`, deny is
 checked only within a matched allow). `enable()` also snapshots the call stack and the

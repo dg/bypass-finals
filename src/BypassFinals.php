@@ -32,7 +32,7 @@ final class BypassFinals
 	/** @var array<string>  List of userland classes loaded before enable() was called */
 	private static array $classesLoadedBeforeEnable = [];
 
-	/** @var array<string, true>  Set of files that were modified */
+	/** @var array<string, string>  Files that were modified => hash of their original code */
 	private static array $modifiedFiles = [];
 
 	/** @var array<string, array<string, true>>  Lowercased names of classes declared final, by file */
@@ -135,7 +135,7 @@ final class BypassFinals
 					: self::removeTokens($code);
 				if ($modifiedCode !== $code) {
 					if ($file !== null) {
-						self::$modifiedFiles[$file] = true;
+						self::$modifiedFiles[$file] = hash('xxh128', $code);
 					}
 					return $modifiedCode;
 				}
@@ -376,7 +376,7 @@ final class BypassFinals
 	/**
 	 * Determines whether the class was declared 'final' in its source file, even if BypassFinals
 	 * has removed the keyword. Useful for architecture tests, where ReflectionClass::isFinal()
-	 * reports the modified code. The source file is read as it is on disk at the time of the call.
+	 * reports the modified code. Throws if the source file has changed since the class was loaded.
 	 * @param  class-string|\ReflectionClass<object>  $class
 	 */
 	public static function wasFinal(string|\ReflectionClass $class): bool
@@ -389,7 +389,14 @@ final class BypassFinals
 			return $rc->isFinal();
 		}
 
-		self::$finalClasses[$file] ??= self::findFinalClasses(self::readOriginal($file));
+		if (!isset(self::$finalClasses[$file])) {
+			$code = self::readOriginal($file);
+			if (hash('xxh128', $code) !== self::$modifiedFiles[$file]) {
+				throw new \RuntimeException("File '$file' has changed since class {$rc->name} was loaded.");
+			}
+			self::$finalClasses[$file] = self::findFinalClasses($code);
+		}
+
 		return isset(self::$finalClasses[$file][strtolower($rc->name)]);
 	}
 
